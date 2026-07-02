@@ -4,6 +4,10 @@ A live, scrubable 3D model of everything we can track in the solar system,
 plotted from real orbital data. Vanilla + Three.js, ships static to GitHub
 Pages. Sister project to **Lynceus** (JWST galaxy ML).
 
+**▶ Live: [mikebertin.github.io/orrery](https://mikebertin.github.io/orrery/)** —
+try [the Apophis 2029 flyby](https://mikebertin.github.io/orrery/#2029-04-13/Apophis)
+or [Halley's return](https://mikebertin.github.io/orrery/#2061-07-28/1P%2FHalley).
+
 > An *orrery* is a mechanical model of the solar system. This is the software one.
 
 ## The "static site + real-time data" trick
@@ -69,6 +73,15 @@ this can't do is sub-second live tracking — meaningless at AU scale anyway.
   jumps 3 days out, focuses, plays at 1 d/s). Remaining: OG image and **deploy
   to `mikebertin.github.io/orrery`** (init repo + push so the data Actions
   start running).
+- **Oort cloud** ✅ *(built)*: a schematic isotropic shell of ~4,500 points
+  from 2,000–50,000 AU (density thinning outward). Its inner edge is 66×
+  beyond Neptune, so the `Oort cloud` toggle flips on log-distance mode —
+  the one view where the whole solar system *and* its cometary halo fit on
+  screen. That sphere-vs-disc contrast is the point.
+- **Info cards** ✅: every clickable thing explains itself — planets carry
+  mass/radius/day/year/moon-count, dwarf planets their discovery + a "known
+  for" note, spacecraft their mission/launch/agency, comets their claim to
+  fame, NEOs their pass details, interstellar visitors their eccentricity.
 - **Famous comets** ✅ *(built)*: the comet point-cloud is anonymous, so eight
   greats get names, real orbits and info cards — 1P/Halley, 2P/Encke,
   9P/Tempel 1, 55P/Tempel–Tuttle (Leonids), 67P/Churyumov–Gerasimenko

@@ -66,7 +66,12 @@ camera.position.set(0, 380, 620);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
-controls.maxDistance = 60000;
+// Stay well inside the sky sphere (SKY_R=32000) — zooming past the Milky Way
+// band breaks the illusion. Linear mode still fits Voyager 1 (~170 AU ≈ 6800
+// units) with margin; log mode compresses everything (Oort shell ≈ 790) so it
+// gets a much tighter leash. Kept in sync by the log toggle.
+const MAX_DIST = { linear: 14000, log: 2600 };
+controls.maxDistance = MAX_DIST.linear;
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.26));   // gentle fill so night sides stay legible
 const sunLight = new THREE.PointLight(0xfff2d6, 3, 0, 0.0);
@@ -265,6 +270,34 @@ const DEG = Math.PI / 180;
 const bodies = [];   // unified: { key, spec, kind, mesh, orbit, label, name, posAt, orbitPts, infoHTML, hidden }
 const labelLayer = document.getElementById("labels");
 
+// click-card facts. Masses in Earth masses; radii are equatorial; day lengths
+// sidereal. Moon counts are the known tallies (they creep up — treat as ~).
+const FACTS = {
+  mercury: { mass: "0.055 M⊕", radius: "2,440 km", day: "58.6 d", year: "88 d", moons: "0" },
+  venus:   { mass: "0.815 M⊕", radius: "6,052 km", day: "243 d (retrograde)", year: "225 d", moons: "0" },
+  earth:   { mass: "5.97×10²⁴ kg", radius: "6,371 km", day: "23.9 h", year: "365.25 d", moons: "1" },
+  mars:    { mass: "0.107 M⊕", radius: "3,390 km", day: "24.6 h", year: "687 d", moons: "2" },
+  jupiter: { mass: "318 M⊕", radius: "69,911 km", day: "9.9 h", year: "11.9 yr", moons: "95" },
+  saturn:  { mass: "95 M⊕", radius: "58,232 km", day: "10.7 h", year: "29.4 yr", moons: "146" },
+  uranus:  { mass: "14.5 M⊕", radius: "25,362 km", day: "17.2 h (retrograde)", year: "84 yr", moons: "28" },
+  neptune: { mass: "17.1 M⊕", radius: "24,622 km", day: "16.1 h", year: "165 yr", moons: "16" },
+  ceres:    { discovered: "1801 (G. Piazzi)", radius: "470 km", note: "largest object in the asteroid belt" },
+  pluto:    { discovered: "1930 (C. Tombaugh)", radius: "1,188 km", note: "5 moons; visited by New Horizons 2015" },
+  haumea:   { discovered: "2004", radius: "~816 km", note: "egg-shaped — spins in under 4 hours" },
+  makemake: { discovered: "2005", radius: "~715 km", note: "bright Kuiper-belt world" },
+  eris:     { discovered: "2005 (M. Brown)", radius: "1,163 km", note: "more massive than Pluto — sparked its demotion" },
+};
+function factRows(key) {
+  const f = FACTS[key];
+  if (!f) return "";
+  const order = { mass: "Mass", radius: "Radius", day: "Day length", year: "Year",
+                  moons: "Moons", discovered: "Discovered", note: "Known for" };
+  return Object.entries(order)
+    .filter(([k]) => f[k])
+    .map(([k, lbl]) => `<div><span>${lbl}</span><b>${f[k]}</b></div>`)
+    .join("");
+}
+
 function makeBody(key, spec, kind, posAt, orbitPts) {
   const look = LOOKS[key];
   const mat = look
@@ -311,8 +344,8 @@ function makeBody(key, spec, kind, posAt, orbitPts) {
       const p = posAt(date), r = Math.hypot(p.x, p.y, p.z);
       return (kind === "dwarf" ? `<div><span>Type</span><b>Dwarf planet</b></div>` : "") +
         `<div><span>Distance from Sun</span><b>${r.toFixed(3)} AU</b></div>` +
-        `<div><span>Heliocentric X/Y/Z</span><b>${p.x.toFixed(2)}, ${p.y.toFixed(2)}, ${p.z.toFixed(2)}</b></div>` +
-        `<div><span>Light time from Sun</span><b>${(r * 499.0 / 60).toFixed(1)} min</b></div>`;
+        `<div><span>Light time from Sun</span><b>${(r * 499.0 / 60).toFixed(1)} min</b></div>` +
+        factRows(key);
     },
   };
   label.addEventListener("click", () => focusTarget(b));
@@ -554,6 +587,8 @@ document.getElementById("log").onclick = (e) => {
   rebuildTrails();
   rebuildInterstellarTrails();
   rebuildFamousCometOrbits();
+  rebuildOort();
+  controls.maxDistance = logScale ? MAX_DIST.log : MAX_DIST.linear;
   smallDirty = true;
 };
 document.getElementById("galaxy").onclick = (e) => {
@@ -811,6 +846,47 @@ loadSmall("asteroids", { size: 2.6, color: 0x9a8f7a });
 loadSmall("neos", { size: 2.3, highlight: true });
 loadSmall("comets", { size: 2.8, color: 0x6fd3e6 });
 
+// ---- Oort cloud (schematic) ------------------------------------------------
+// A spherical shell of icy nuclei from ~2,000 to ~50,000 AU — 66× beyond
+// Neptune at its inner edge, so it only fits on screen in log-distance mode
+// (enabling the layer flips log mode on). Isotropic on purpose: it's a sphere,
+// not a disc — that's the whole visual point. Density thins outward.
+const OORT_N = 4500, OORT_RMIN = 2000, OORT_RMAX = 50000;
+const oortDir = new Float32Array(OORT_N * 3);   // unit directions (ecliptic AU frame)
+const oortRad = new Float64Array(OORT_N);       // radii in AU
+for (let k = 0; k < OORT_N; k++) {
+  const z = Math.random() * 2 - 1, ph = Math.random() * 2 * Math.PI, s = Math.sqrt(1 - z * z);
+  oortDir[k*3] = s * Math.cos(ph); oortDir[k*3+1] = s * Math.sin(ph); oortDir[k*3+2] = z;
+  oortRad[k] = OORT_RMIN * Math.pow(OORT_RMAX / OORT_RMIN, Math.pow(Math.random(), 1.6));
+}
+const oortGeom = new THREE.BufferGeometry();
+oortGeom.setAttribute("position", new THREE.BufferAttribute(new Float32Array(OORT_N * 3), 3));
+const oortPts = new THREE.Points(oortGeom, new THREE.PointsMaterial({
+  size: 2.2, sizeAttenuation: false, map: ROCK, alphaTest: 0.3, transparent: true,
+  opacity: 0.45, color: 0x9fb4d8, depthWrite: false }));
+oortPts.frustumCulled = false;
+oortPts.visible = false;
+scene.add(oortPts);
+function rebuildOort() {   // static shell; recompute only when the radial map changes
+  const pos = oortGeom.attributes.position.array;
+  for (let k = 0; k < OORT_N; k++) {
+    const v = toScene({ x: oortDir[k*3] * oortRad[k], y: oortDir[k*3+1] * oortRad[k], z: oortDir[k*3+2] * oortRad[k] });
+    pos[k*3] = v.x; pos[k*3+1] = v.y; pos[k*3+2] = v.z;
+  }
+  oortGeom.attributes.position.needsUpdate = true;
+  markerWorld.oort.copy(toScene({ x: OORT_RMIN * 1.4, y: 0, z: 0 }));
+}
+markerEls.oort = makeMarker("Oort cloud · schematic");
+markerWorld.oort = new THREE.Vector3();
+markerGroup.oort = oortPts;
+rebuildOort();
+document.getElementById("oort").onclick = (e) => {
+  const v = !e.target.classList.contains("on");
+  e.target.classList.toggle("on", v);
+  oortPts.visible = v;
+  if (v && !logScale) document.getElementById("log").click();   // it only reads in log mode
+};
+
 // ---- spacecraft (Tier 3, JPL Horizons) ------------------------------------
 // Active missions don't follow Keplerian orbits, so instead of elements we
 // carry Horizons-sampled state vectors (committed daily by the Action) and
@@ -917,12 +993,17 @@ async function loadSpacecraft() {
     const sc = {
       name: c.name, t, p, trail, marker, label, mesh: marker,
       infoHTML: () => {
+        // mission metadata rides in the JSON (fields absent in pre-07/02 data)
+        const meta =
+          (c.mission ? `<div><span>Mission</span><b>${c.mission}</b></div>` : "") +
+          (c.launch ? `<div><span>Launched</span><b>${c.launch}</b></div>` : "") +
+          (c.agency ? `<div><span>Agency</span><b>${c.agency}</b></div>` : "");
         const q = sc.lastPos;
-        if (!q) return `<div><span>Type</span><b>Spacecraft</b></div>` +
+        if (!q) return `<div><span>Type</span><b>Spacecraft</b></div>` + meta +
           `<div><span>Status</span><b>outside data window</b></div>`;
         const r = Math.hypot(q.x, q.y, q.z), min = r * 499 / 60;
         const lt = min > 90 ? `${(min/60).toFixed(1)} h` : `${min.toFixed(1)} min`;
-        return `<div><span>Type</span><b>Spacecraft</b></div>` +
+        return `<div><span>Type</span><b>Spacecraft</b></div>` + meta +
           `<div><span>Distance from Sun</span><b>${r.toFixed(2)} AU</b></div>` +
           `<div><span>Light time from Sun</span><b>${lt}</b></div>`;
       },
