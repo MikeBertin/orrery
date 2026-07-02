@@ -849,7 +849,7 @@ function maybeUpdateSmall(now) {
   lastSmallMs = now; smallDirty = false;
 }
 
-for (const nm of ["asteroids", "neos", "comets"]) {
+for (const nm of ["asteroids", "neos", "comets", "tnos"]) {
   document.getElementById(nm).onclick = (e) => {
     const v = !e.target.classList.contains("on");
     e.target.classList.toggle("on", v);
@@ -862,6 +862,7 @@ for (const nm of ["asteroids", "neos", "comets"]) {
 loadSmall("asteroids", { size: 2.6, color: 0x9a8f7a });
 loadSmall("neos", { size: 2.3, highlight: true });
 loadSmall("comets", { size: 2.8, color: 0x6fd3e6 });
+loadSmall("tnos", { size: 2.4, color: 0xa9c4e6 });   // Kuiper belt: icy pale blue
 
 // ---- Oort cloud (schematic) ------------------------------------------------
 // A spherical shell of icy nuclei from ~2,000 to ~50,000 AU — 66× beyond

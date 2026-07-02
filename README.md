@@ -73,6 +73,11 @@ this can't do is sub-second live tracking — meaningless at AU scale anyway.
   jumps 3 days out, focuses, plays at 1 d/s). Remaining: OG image and **deploy
   to `mikebertin.github.io/orrery`** (init repo + push so the data Actions
   start running).
+- **Kuiper belt** ✅ *(built)*: ~6,400 trans-Neptunian objects from JPL SBDB
+  (`sb-class=TNO`) through the same element→point-cloud pipeline as the
+  asteroids — the icy ring at 30–50 AU plus the scattered disc, finally
+  giving Pluto, Haumea, Makemake and Eris their context. `Kuiper belt`
+  toggle; refreshed by the same Action.
 - **Oort cloud** ✅ *(built)*: a schematic isotropic shell of ~4,500 points
   from 2,000–50,000 AU (density thinning outward). Its inner edge is 66×
   beyond Neptune, so the `Oort cloud` toggle flips on log-distance mode —
