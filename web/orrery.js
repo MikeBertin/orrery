@@ -479,7 +479,10 @@ let homeFly = false;        // easing back to the Sun-centred overview
 const HOME = new THREE.Vector3(0, 380, 620);   // default camera vantage
 const ORIGIN = new THREE.Vector3();            // the Sun
 
-const SPEEDS = [ -3650, -365, -30, -7, -1, 0, 1, 7, 30, 365, 3650 ];
+// sub-day steps exist for the close approaches: at ±1 d/s a flyby sweeps past
+// in seconds; at 1 h/s (and 5 min/s for the truly close ones) it's watchable.
+const HOUR = 1 / 24, MIN5 = 5 / 1440;
+const SPEEDS = [ -3650, -365, -30, -7, -1, -HOUR, -MIN5, 0, MIN5, HOUR, 1, 7, 30, 365, 3650 ];
 let speedIdx = SPEEDS.indexOf(1);
 
 function setSpeedIdx(i) {
@@ -491,7 +494,9 @@ function fmtSpeed(d) {
   if (d === 0) return "paused";
   const a = Math.abs(d), sign = d < 0 ? "−" : "+";
   if (a >= 365) return `${sign}${(a/365).toFixed(a%365?1:0)} yr/s`;
-  return `${sign}${a} d/s`;
+  if (a >= 1) return `${sign}${a} d/s`;
+  if (a >= HOUR) return `${sign}${Math.round(a * 24)} h/s`;
+  return `${sign}${Math.round(a * 1440)} min/s`;
 }
 
 function updatePositions() {
@@ -571,15 +576,16 @@ ui.scrub.addEventListener("input", () => {
   const t = parseFloat(ui.scrub.value);             // -1..1
   simDate = new Date(anchor + t * SCRUB_SPAN);
   smallDirty = true;
+  demoCue = null;
 });
 function syncScrub() {
   ui.scrub.value = ((simDate.getTime() - anchor) / SCRUB_SPAN).toString();
 }
 
-document.getElementById("slower").onclick = () => setSpeedIdx(speedIdx - 1);
-document.getElementById("faster").onclick = () => setSpeedIdx(speedIdx + 1);
+document.getElementById("slower").onclick = () => { demoCue = null; setSpeedIdx(speedIdx - 1); };
+document.getElementById("faster").onclick = () => { demoCue = null; setSpeedIdx(speedIdx + 1); };
 ui.play.onclick = () => { playing = !playing; ui.play.textContent = playing ? "⏸" : "▶"; };
-document.getElementById("now").onclick = () => { simDate = new Date(); setSpeedIdx(SPEEDS.indexOf(1)); smallDirty = true; };
+document.getElementById("now").onclick = () => { demoCue = null; simDate = new Date(); setSpeedIdx(SPEEDS.indexOf(1)); smallDirty = true; };
 document.getElementById("log").onclick = (e) => {
   logScale = !logScale;
   e.target.classList.toggle("on", logScale);
@@ -620,8 +626,8 @@ document.getElementById("size").oninput = (e) => {
 addEventListener("keydown", (e) => {
   if (e.target.tagName === "INPUT") return;   // don't hijack keys while typing in search
   if (e.key === " ") { ui.play.click(); e.preventDefault(); }
-  if (e.key === "ArrowRight") setSpeedIdx(speedIdx + 1);
-  if (e.key === "ArrowLeft") setSpeedIdx(speedIdx - 1);
+  if (e.key === "ArrowRight") { demoCue = null; setSpeedIdx(speedIdx + 1); }
+  if (e.key === "ArrowLeft") { demoCue = null; setSpeedIdx(speedIdx - 1); }
   if (e.key === "Escape") clearFocus();
   if (e.key === "h" || e.key === "H") recenter();
 });
@@ -1030,6 +1036,7 @@ document.getElementById("craft").onclick = (e) => {
 // miss distance drive the list and the "approaching now" pulse/flag line.
 const approachLayer = new THREE.Group(); scene.add(approachLayer);
 const approaches = [];
+let demoCue = null;   // approach the demo button is driving: auto-slows near the pass
 const APPROACH_GLOW = glowTexture();   // soft halo, pulsed on the object nearest its closest approach
 const flagLine = new THREE.Line(
   new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
@@ -1106,6 +1113,7 @@ async function loadApproaches() {
       setSpeedIdx(SPEEDS.indexOf(1));                     // …and roll at 1 d/s
       playing = true; ui.play.textContent = "⏸";
       smallDirty = true;
+      demoCue = apophis;                                  // updateDemo slows the final approach
     };
   }
 }
@@ -1137,6 +1145,17 @@ function updateApproaches(jd) {
   } else approachOrbit.visible = false;
 }
 
+// While the demo button is driving the clock: cruise in at 1 d/s, drop to
+// 1 h/s inside ±12 h of closest approach so the skim reads in real time, then
+// hand the controls back once the rock is clear. Any manual speed/scrub input
+// cancels the cue — the user has taken over.
+function updateDemo(jd) {
+  if (!demoCue || !playing) return;
+  const dt = jd - demoCue.approach.jd;
+  if (dt > 0.5) { setSpeedIdx(SPEEDS.indexOf(1)); demoCue = null; }
+  else if (Math.abs(dt) <= 0.5 && speedDays !== HOUR) setSpeedIdx(SPEEDS.indexOf(HOUR));
+}
+
 function buildApproachList() {
   const list = document.getElementById("approach-list");
   document.getElementById("approach-count").textContent = `${approaches.length}`;
@@ -1154,6 +1173,7 @@ function buildApproachList() {
 }
 
 function goToApproach(a) {
+  demoCue = null;   // the demo re-arms after this call; a plain row click just cancels
   simDate = new Date((a.approach.jd - 2440587.5) * 86400000);   // jump to the moment
   setSpeedIdx(SPEEDS.indexOf(0));                                // pause on it
   smallDirty = true;
@@ -1348,6 +1368,7 @@ function tick(now) {
   maybeUpdateSmall(now);
   updateSpacecraft(julianDate(simDate));
   updateApproaches(julianDate(simDate));
+  updateDemo(julianDate(simDate));
   updateInterstellar();
   updateFamousComets();
 
