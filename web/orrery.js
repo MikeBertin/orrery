@@ -1071,9 +1071,14 @@ async function loadApproaches() {
       orbitPts: (n) => smallBodyOrbit(el, n),
       infoHTML: (date) => {
         const p = smallBodyPosition(el, date), r = Math.hypot(p.x, p.y, p.z);
+        const km = o.ld * 384400;      // LD → km (centre-to-centre)
+        const alt = km - 6371;         // height above Earth's surface
         return `<div><span>Type</span><b>Near-Earth object</b></div>` +
-          `<div><span>Closest approach</span><b>${o.cd.split(" ")[0]}</b></div>` +
-          `<div><span>Miss distance</span><b>${o.ld.toFixed(2)} lunar dist</b></div>` +
+          `<div><span>Closest approach</span><b>${o.cd} UTC</b></div>` +
+          `<div><span>Miss distance</span><b>${o.ld.toFixed(2)} LD · ${Math.round(km).toLocaleString()} km</b></div>` +
+          // 42,164 km = geostationary-ring radius from Earth's centre — the
+          // headline fact for Apophis 2029: it passes beneath our GEO satellites
+          (km < 42164 ? `<div><span>How close?</span><b>inside the geostationary ring — ${Math.round(alt).toLocaleString()} km above the surface</b></div>` : "") +
           `<div><span>Relative speed</span><b>${o.v} km/s</b></div>` +
           `<div><span>Distance from Sun</span><b>${r.toFixed(3)} AU</b></div>`;
       },
