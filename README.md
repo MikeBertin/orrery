@@ -79,9 +79,14 @@ this can't do is sub-second live tracking — meaningless at AU scale anyway.
   the one view where the whole solar system *and* its cometary halo fit on
   screen. That sphere-vs-disc contrast is the point.
 - **Info cards** ✅: every clickable thing explains itself — planets carry
-  mass/radius/day/year/moon-count, dwarf planets their discovery + a "known
-  for" note, spacecraft their mission/launch/agency, comets their claim to
-  fame, NEOs their pass details, interstellar visitors their eccentricity.
+  mass/radius/volume/day/year/moon-count, dwarf planets their mass, discovery
+  + a "known for" note, moons their mass, spacecraft their
+  mission/launch/agency, comets their claim to fame + nucleus size/mass,
+  NEOs their pass details, interstellar visitors their eccentricity and size.
+  Small-body sizes use SBDB's measured diameter when one exists (Apophis:
+  340 m by radar), else an H-magnitude estimate; mass/volume are derived from
+  size at an assumed bulk density (stony for NEOs, fluffy ice for comet
+  nuclei) and labelled as estimates.
 - **Famous comets** ✅ *(built)*: the comet point-cloud is anonymous, so eight
   greats get names, real orbits and info cards — 1P/Halley, 2P/Encke,
   9P/Tempel 1, 55P/Tempel–Tuttle (Leonids), 67P/Churyumov–Gerasimenko

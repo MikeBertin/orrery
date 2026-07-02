@@ -139,10 +139,11 @@ export const DWARFS = {
 // Interstellar objects — visitors from beyond the solar system, on HYPERBOLIC
 // orbits (e > 1, unbound: they pass through once and leave). Elements from JPL
 // SBDB: q perihelion distance (AU), e, i/om/w (deg), tp perihelion time (JD).
+// size = published estimates (these never got radar; brightness/shape models)
 export const INTERSTELLAR = {
-  oumuamua: { name: "1I/'Oumuamua", color: 0xff6b6b, disc: "Oct 2017", peri: "2017-09-09", e: 1.201133796, q: 0.2559115813, i: 122.7417063, om: 24.5969096, w: 241.8105360, tp: 2458006.007321 },
-  borisov:  { name: "2I/Borisov",   color: 0x66d9e8, disc: "Aug 2019", peri: "2019-12-08", e: 3.356475783, q: 2.0065208785, i: 44.0526425, om: 308.1477292, w: 209.1236864, tp: 2458826.052846 },
-  atlas:    { name: "3I/ATLAS",     color: 0xb98cff, disc: "Jul 2025", peri: "2025-10-29", e: 6.141351449, q: 1.3564810572, i: 175.1164571, om: 322.1696089, w: 128.0228697, tp: 2460977.995263 },
+  oumuamua: { name: "1I/'Oumuamua", color: 0xff6b6b, disc: "Oct 2017", peri: "2017-09-09", size: "100–200 m, cigar-shaped", e: 1.201133796, q: 0.2559115813, i: 122.7417063, om: 24.5969096, w: 241.8105360, tp: 2458006.007321 },
+  borisov:  { name: "2I/Borisov",   color: 0x66d9e8, disc: "Aug 2019", peri: "2019-12-08", size: "~0.5–1 km nucleus", e: 3.356475783, q: 2.0065208785, i: 44.0526425, om: 308.1477292, w: 209.1236864, tp: 2458826.052846 },
+  atlas:    { name: "3I/ATLAS",     color: 0xb98cff, disc: "Jul 2025", peri: "2025-10-29", size: "~1 km nucleus (≲5.6 km)", e: 6.141351449, q: 1.3564810572, i: 175.1164571, om: 322.1696089, w: 128.0228697, tp: 2460977.995263 },
 };
 
 const GK = 0.01720209895;   // Gaussian gravitational constant (rad/day, AU)

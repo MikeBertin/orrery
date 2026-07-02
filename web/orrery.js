@@ -6,7 +6,7 @@ import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
 import { PLANETS, planetPosition, orbitSamples, centuriesSinceJ2000, julianDate,
          DWARFS, smallBodyPosition, smallBodyOrbit,
-         INTERSTELLAR, interstellarPosition, interstellarPath } from "./ephem.js?v=m8";
+         INTERSTELLAR, interstellarPosition, interstellarPath } from "./ephem.js?v=m10";
 import * as TEX from "./textures.js?v=m9";
 
 // per-planet surface texture + axial tilt (deg) + sidereal rotation (days;
@@ -273,25 +273,25 @@ const labelLayer = document.getElementById("labels");
 // click-card facts. Masses in Earth masses; radii are equatorial; day lengths
 // sidereal. Moon counts are the known tallies (they creep up — treat as ~).
 const FACTS = {
-  mercury: { mass: "0.055 M⊕", radius: "2,440 km", day: "58.6 d", year: "88 d", moons: "0" },
-  venus:   { mass: "0.815 M⊕", radius: "6,052 km", day: "243 d (retrograde)", year: "225 d", moons: "0" },
-  earth:   { mass: "5.97×10²⁴ kg", radius: "6,371 km", day: "23.9 h", year: "365.25 d", moons: "1" },
-  mars:    { mass: "0.107 M⊕", radius: "3,390 km", day: "24.6 h", year: "687 d", moons: "2" },
-  jupiter: { mass: "318 M⊕", radius: "69,911 km", day: "9.9 h", year: "11.9 yr", moons: "95" },
-  saturn:  { mass: "95 M⊕", radius: "58,232 km", day: "10.7 h", year: "29.4 yr", moons: "146" },
-  uranus:  { mass: "14.5 M⊕", radius: "25,362 km", day: "17.2 h (retrograde)", year: "84 yr", moons: "28" },
-  neptune: { mass: "17.1 M⊕", radius: "24,622 km", day: "16.1 h", year: "165 yr", moons: "16" },
-  ceres:    { discovered: "1801 (G. Piazzi)", radius: "470 km", note: "largest object in the asteroid belt" },
-  pluto:    { discovered: "1930 (C. Tombaugh)", radius: "1,188 km", note: "5 moons; visited by New Horizons 2015" },
-  haumea:   { discovered: "2004", radius: "~816 km", note: "egg-shaped — spins in under 4 hours" },
-  makemake: { discovered: "2005", radius: "~715 km", note: "bright Kuiper-belt world" },
-  eris:     { discovered: "2005 (M. Brown)", radius: "1,163 km", note: "more massive than Pluto — sparked its demotion" },
+  mercury: { mass: "0.055 M⊕", radius: "2,440 km", volume: "0.056 × Earth", day: "58.6 d", year: "88 d", moons: "0" },
+  venus:   { mass: "0.815 M⊕", radius: "6,052 km", volume: "0.86 × Earth", day: "243 d (retrograde)", year: "225 d", moons: "0" },
+  earth:   { mass: "5.97×10²⁴ kg", radius: "6,371 km", volume: "1.08×10¹² km³", day: "23.9 h", year: "365.25 d", moons: "1" },
+  mars:    { mass: "0.107 M⊕", radius: "3,390 km", volume: "0.151 × Earth", day: "24.6 h", year: "687 d", moons: "2" },
+  jupiter: { mass: "318 M⊕", radius: "69,911 km", volume: "1,321 × Earth", day: "9.9 h", year: "11.9 yr", moons: "95" },
+  saturn:  { mass: "95 M⊕", radius: "58,232 km", volume: "764 × Earth", day: "10.7 h", year: "29.4 yr", moons: "146" },
+  uranus:  { mass: "14.5 M⊕", radius: "25,362 km", volume: "63 × Earth", day: "17.2 h (retrograde)", year: "84 yr", moons: "28" },
+  neptune: { mass: "17.1 M⊕", radius: "24,622 km", volume: "58 × Earth", day: "16.1 h", year: "165 yr", moons: "16" },
+  ceres:    { mass: "9.4×10²⁰ kg", discovered: "1801 (G. Piazzi)", radius: "470 km", note: "largest object in the asteroid belt" },
+  pluto:    { mass: "1.3×10²² kg", discovered: "1930 (C. Tombaugh)", radius: "1,188 km", note: "5 moons; visited by New Horizons 2015" },
+  haumea:   { mass: "4.0×10²¹ kg", discovered: "2004", radius: "~816 km", note: "egg-shaped — spins in under 4 hours" },
+  makemake: { mass: "~3.1×10²¹ kg", discovered: "2005", radius: "~715 km", note: "bright Kuiper-belt world" },
+  eris:     { mass: "1.7×10²² kg", discovered: "2005 (M. Brown)", radius: "1,163 km", note: "more massive than Pluto — sparked its demotion" },
 };
 function factRows(key) {
   const f = FACTS[key];
   if (!f) return "";
-  const order = { mass: "Mass", radius: "Radius", day: "Day length", year: "Year",
-                  moons: "Moons", discovered: "Discovered", note: "Known for" };
+  const order = { mass: "Mass", radius: "Radius", volume: "Volume", day: "Day length",
+                  year: "Year", moons: "Moons", discovered: "Discovered", note: "Known for" };
   return Object.entries(order)
     .filter(([k]) => f[k])
     .map(([k, lbl]) => `<div><span>${lbl}</span><b>${f[k]}</b></div>`)
@@ -394,6 +394,15 @@ const MOONS = [
   ["Charon", "pluto", 19591, 6.387, 606, 0.08, 0xb9b0a4],
 ];
 
+// known masses (kg) for the schematic moons — feeds the info cards
+const MOON_MASS = {
+  Moon: "7.3×10²² kg", Phobos: "1.1×10¹⁶ kg", Deimos: "1.5×10¹⁵ kg",
+  Io: "8.9×10²² kg", Europa: "4.8×10²² kg", Ganymede: "1.5×10²³ kg", Callisto: "1.1×10²³ kg",
+  Enceladus: "1.1×10²⁰ kg", Rhea: "2.3×10²¹ kg", Titan: "1.35×10²³ kg", Iapetus: "1.8×10²¹ kg",
+  Miranda: "6.6×10¹⁹ kg", Titania: "3.4×10²¹ kg", Oberon: "2.9×10²¹ kg",
+  Triton: "2.1×10²² kg", Charon: "1.6×10²¹ kg",
+};
+
 const moonLayer = new THREE.Group(); scene.add(moonLayer);
 const moons = [];
 const moonGroups = {};
@@ -446,6 +455,7 @@ for (const [pkey, rows] of Object.entries(moonGroups)) {
         `<div><span>Orbits</span><b>${parent.name}</b></div>` +
         `<div><span>Orbital period</span><b>${period < 1 ? (period * 24).toFixed(1) + " h" : period.toFixed(2) + " d"}</b></div>` +
         `<div><span>Radius</span><b>${radiusKm.toLocaleString()} km</b></div>` +
+        (MOON_MASS[name] ? `<div><span>Mass</span><b>${MOON_MASS[name]}</b></div>` : "") +
         `<div style="opacity:.55"><span>distance</span><b>not to scale</b></div>`,
     };
     label.addEventListener("click", () => focusTarget(m));
@@ -1053,6 +1063,34 @@ function shortName(s) {
   return r;
 }
 
+// ---- physical estimates (size / mass / volume) ------------------------------
+// Size: SBDB's measured diameter (radar/occultation/thermal) when it has one,
+// else derived from absolute magnitude H at an assumed albedo of 0.14 — the
+// standard D = 1329/√p · 10^(−H/5), good to ~×2 either way. Mass is ALWAYS an
+// estimate for these bodies: a sphere of that diameter at an assumed bulk
+// density (stony rubble ~2.6 g/cm³ for NEOs, fluffy ice ~0.6 g/cm³ for comet
+// nuclei — 67P measured 0.53). Order-of-magnitude honest, so rows say "est."
+const SUP = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴",
+              "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+const sup = (n) => String(n).split("").map((c) => SUP[c]).join("");
+const estDiamKm = (H) => 1329 / Math.sqrt(0.14) * Math.pow(10, -H / 5);
+const fmtDiam = (km) => km < 1 ? `~${Math.round(km * 1000)} m`
+  : `~${km < 10 ? km.toFixed(1) : Math.round(km)} km`;
+function fmtMass(kg) {
+  const e = Math.floor(Math.log10(kg));
+  return `~${(kg / 10 ** e).toFixed(1)}×10${sup(e)} kg`;
+}
+function sizeMassRows(dKm, density, measured, label = "Size") {
+  const r = dKm * 500;                                  // radius in m
+  const vol = 4 / 3 * Math.PI * r ** 3;                 // m³
+  const volTxt = vol >= 1e9 ? `~${Math.round(vol / 1e9).toLocaleString()} km³`
+    : vol >= 1e6 ? `~${(vol / 1e6).toFixed(vol < 1e7 ? 1 : 0)} million m³`
+    : `~${Math.round(vol).toLocaleString()} m³`;
+  return `<div><span>${label}</span><b>${fmtDiam(dKm)}${measured ? "" : " (est.)"}</b></div>` +
+    `<div><span>Est. mass</span><b>${fmtMass(vol * density)}</b></div>` +
+    `<div><span>Volume</span><b>${volTxt}</b></div>`;
+}
+
 async function loadApproaches() {
   let json;
   try { json = await (await fetch("./data/close_approaches.json")).json(); }
@@ -1081,6 +1119,7 @@ async function loadApproaches() {
         const p = smallBodyPosition(el, date), r = Math.hypot(p.x, p.y, p.z);
         const km = o.ld * 384400;      // LD → km (centre-to-centre)
         const alt = km - 6371;         // height above Earth's surface
+        const D = o.di ?? (o.h != null ? estDiamKm(o.h) : null);   // measured beats H-derived
         return `<div><span>Type</span><b>Near-Earth object</b></div>` +
           `<div><span>Closest approach</span><b>${o.cd} UTC</b></div>` +
           `<div><span>Miss distance</span><b>${o.ld.toFixed(2)} LD · ${Math.round(km).toLocaleString()} km</b></div>` +
@@ -1088,6 +1127,7 @@ async function loadApproaches() {
           // headline fact for Apophis 2029: it passes beneath our GEO satellites
           (km < 42164 ? `<div><span>How close?</span><b>inside the geostationary ring — ${Math.round(alt).toLocaleString()} km above the surface</b></div>` : "") +
           `<div><span>Relative speed</span><b>${o.v} km/s</b></div>` +
+          (D ? sizeMassRows(D, 2600, o.di != null) : "") +
           `<div><span>Distance from Sun</span><b>${r.toFixed(3)} AU</b></div>`;
       },
     };
@@ -1221,6 +1261,7 @@ for (const [, el] of Object.entries(INTERSTELLAR)) {
       return `<div><span>Type</span><b>Interstellar object</b></div>` +
         `<div><span>Discovered</span><b>${el.disc}</b></div>` +
         `<div><span>Perihelion</span><b>${el.peri}</b></div>` +
+        `<div><span>Size (est.)</span><b>${el.size}</b></div>` +
         `<div><span>Eccentricity</span><b>${el.e.toFixed(2)} — unbound</b></div>` +
         `<div><span>Distance from Sun</span><b>${r.toFixed(2)} AU</b></div>` +
         `<div style="opacity:.6"><span>origin</span><b>interstellar space</b></div>`;
@@ -1291,6 +1332,7 @@ async function loadFamousComets() {
           `<div><span>Known for</span><b>${c.note}</b></div>` +
           `<div><span>Period</span><b>${periodYr.toFixed(1)} yr</b></div>` +
           `<div><span>Perihelion</span><b>${(c.a * (1 - c.e)).toFixed(2)} AU</b></div>` +
+          (c.di ? sizeMassRows(c.di, 600, true, "Nucleus") : "") +
           `<div><span>Distance from Sun</span><b>${r.toFixed(2)} AU</b></div>`;
       },
     };

@@ -58,7 +58,7 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     comets = []
     for des, (name, note) in FAMOUS.items():
-        url = f"{SBDB}?{urllib.parse.urlencode({'sstr': des, 'full-prec': 'true'})}"
+        url = f"{SBDB}?{urllib.parse.urlencode({'sstr': des, 'full-prec': 'true', 'phys-par': 'true'})}"
         try:
             d = get_json(url)
             o = d["orbit"]
@@ -68,6 +68,11 @@ def main():
                 "om": num(e.get("om")), "w": num(e.get("w")), "ma": num(e.get("ma")),
                 "ep": num(o.get("epoch")),
             }
+            # measured nucleus diameter (km) when SBDB has one — the client
+            # shows it + estimates mass/volume at comet-nucleus density
+            for p in d.get("phys_par") or []:
+                if p.get("name") == "diameter" and num(p.get("value")):
+                    el["di"] = num(p.get("value"))
         except Exception as ex:
             print(f"    SBDB failed for {des}: {ex}", file=sys.stderr)
             continue

@@ -40,16 +40,23 @@ def num(x):
 
 
 def sbdb_elements(des):
-    url = f"{SBDB}?{urllib.parse.urlencode({'sstr': des, 'full-prec': 'true'})}"
+    url = f"{SBDB}?{urllib.parse.urlencode({'sstr': des, 'full-prec': 'true', 'phys-par': 'true'})}"
     try:
         d = get_json(url)
         o = d["orbit"]
         e = {x["name"]: x["value"] for x in o["elements"]}
-        return {
+        el = {
             "a": num(e.get("a")), "e": num(e.get("e")), "i": num(e.get("i")),
             "om": num(e.get("om")), "w": num(e.get("w")), "ma": num(e.get("ma")),
             "ep": num(o.get("epoch")),
         }
+        # measured diameter (radar/occultation/thermal) when SBDB has one, km —
+        # the client shows it as Size and estimates mass/volume from it; objects
+        # without one fall back to an H-magnitude size estimate client-side
+        for p in d.get("phys_par") or []:
+            if p.get("name") == "diameter" and num(p.get("value")):
+                el["di"] = num(p.get("value"))
+        return el
     except Exception as ex:
         print(f"    SBDB failed for {des}: {ex}", file=sys.stderr)
         return None
@@ -89,6 +96,7 @@ def main():
             "jd": num(r["jd"]), "cd": r["cd"],
             "ld": round(float(r["dist"]) / AU_PER_LD, 3),
             "v": round(float(r["v_rel"]), 2),
+            "h": num(r.get("h")),      # absolute magnitude → client size estimate
             **el,
         })
         print(f"    {objects[-1]['name'][:30]:30s} {objects[-1]['ld']:6.2f} LD", file=sys.stderr)
