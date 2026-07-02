@@ -28,16 +28,23 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Each fetch is independent and the JSONs are already committed, so one
+      # flaky JPL endpoint shouldn't block the others — a failed layer just
+      # keeps yesterday's data (the site's freshness chip reports the oldest).
       - name: Fetch small bodies from JPL SBDB
+        continue-on-error: true
         run: python3 tools/fetch_smallbodies.py
 
       - name: Fetch spacecraft from JPL Horizons
+        continue-on-error: true
         run: python3 tools/fetch_spacecraft.py
 
       - name: Fetch Earth close approaches from JPL CAD
+        continue-on-error: true
         run: python3 tools/fetch_close_approaches.py
 
       - name: Fetch famous comets from JPL SBDB
+        continue-on-error: true
         run: python3 tools/fetch_famous_comets.py
 
       - name: Commit if data changed

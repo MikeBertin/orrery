@@ -31,16 +31,18 @@ def query(params):
     """Run one SBDB query; return list of row-dicts."""
     qs = urllib.parse.urlencode(params)
     url = f"{API}?{qs}"
-    for attempt in range(4):
+    for attempt in range(6):
         try:
-            with urllib.request.urlopen(url, timeout=90) as r:
+            # generous timeout: the H<12 asteroid query streams ~9k rows and can
+            # exceed 90s from an Actions runner (bit us on the first cloud run)
+            with urllib.request.urlopen(url, timeout=240) as r:
                 d = json.load(r)
             break
         except Exception as e:  # transient network / rate limit
-            if attempt == 3:
+            if attempt == 5:
                 raise
             print(f"  retry {attempt+1} ({e})", file=sys.stderr)
-            time.sleep(2 * (attempt + 1))
+            time.sleep(5 * (attempt + 1))
     cols = d["fields"]
     return [dict(zip(cols, row)) for row in d.get("data", [])]
 
