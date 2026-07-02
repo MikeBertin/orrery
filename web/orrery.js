@@ -277,9 +277,9 @@ const FACTS = {
   venus:   { mass: "0.815 M⊕", radius: "6,052 km", volume: "0.86 × Earth", day: "243 d (retrograde)", year: "225 d", moons: "0" },
   earth:   { mass: "5.97×10²⁴ kg", radius: "6,371 km", volume: "1.08×10¹² km³", day: "23.9 h", year: "365.25 d", moons: "1" },
   mars:    { mass: "0.107 M⊕", radius: "3,390 km", volume: "0.151 × Earth", day: "24.6 h", year: "687 d", moons: "2" },
-  jupiter: { mass: "318 M⊕", radius: "69,911 km", volume: "1,321 × Earth", day: "9.9 h", year: "11.9 yr", moons: "95" },
-  saturn:  { mass: "95 M⊕", radius: "58,232 km", volume: "764 × Earth", day: "10.7 h", year: "29.4 yr", moons: "146" },
-  uranus:  { mass: "14.5 M⊕", radius: "25,362 km", volume: "63 × Earth", day: "17.2 h (retrograde)", year: "84 yr", moons: "28" },
+  jupiter: { mass: "318 M⊕", radius: "69,911 km", volume: "1,321 × Earth", day: "9.9 h", year: "11.9 yr", moons: "97" },
+  saturn:  { mass: "95 M⊕", radius: "58,232 km", volume: "764 × Earth", day: "10.7 h", year: "29.4 yr", moons: "274" },
+  uranus:  { mass: "14.5 M⊕", radius: "25,362 km", volume: "63 × Earth", day: "17.2 h (retrograde)", year: "84 yr", moons: "29" },
   neptune: { mass: "17.1 M⊕", radius: "24,622 km", volume: "58 × Earth", day: "16.1 h", year: "165 yr", moons: "16" },
   ceres:    { mass: "9.4×10²⁰ kg", discovered: "1801 (G. Piazzi)", radius: "470 km", note: "largest object in the asteroid belt" },
   pluto:    { mass: "1.3×10²² kg", discovered: "1930 (C. Tombaugh)", radius: "1,188 km", note: "5 moons; visited by New Horizons 2015" },
@@ -754,6 +754,17 @@ function noteDataFail(name) {
   dataStatus.failed.push(name);
   renderDataStatus();
 }
+// Phones hide the whole .hint block (no room), which used to take the
+// freshness chip with it — reparent the chip into the HUD there instead.
+const narrowMQ = matchMedia("(max-width: 700px)");
+function placeDataStatus() {
+  const el = document.getElementById("data-status");
+  (narrowMQ.matches ? document.querySelector(".hud") : document.querySelector(".hint")).appendChild(el);
+}
+placeDataStatus();
+narrowMQ.addEventListener("change", placeDataStatus);
+addEventListener("resize", placeDataStatus);   // some embedders resize without an MQ change event
+
 function renderDataStatus() {
   const el = document.getElementById("data-status");
   if (!el) return;
@@ -976,10 +987,16 @@ function updateSpacecraft(jd) {
   for (const sc of spacecraft) {
     const pos = interpCraft(sc, jd);
     sc.lastPos = pos;
-    if (!pos) { sc.marker.visible = false; continue; }
+    if (!pos) { sc.marker.visible = false; sc.leader.visible = false; continue; }
     sc.marker.visible = true;
     sc.marker.position.copy(toScene(pos));
-    explodeFromPlanets(sc.marker.position);   // nudge L2/orbiter craft off their planet
+    // nudge L2/orbiter craft off their planet — and draw a leader line back to
+    // it so the offset reads as "attached to Earth", not "floating in space"
+    const from = explodeFromPlanets(sc.marker.position);
+    if (from) {
+      sc.leader.geometry.setFromPoints([from.mesh.position, sc.marker.position]);
+      sc.leader.visible = true;
+    } else sc.leader.visible = false;
     sc.marker.scale.setScalar(markerScale(sc.marker.position, MARKER_PX.craft));
   }
 }
@@ -1003,13 +1020,19 @@ async function loadSpacecraft() {
     marker.scale.setScalar(3.0);
     craftLayer.add(marker);
 
+    const leader = new THREE.Line(   // planet ↔ marker tether when exploded off it
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+      new THREE.LineBasicMaterial({ color: 0x5a6470, transparent: true, opacity: 0.55 }));
+    leader.visible = false;
+    craftLayer.add(leader);
+
     const label = document.createElement("div");
     label.className = "label craft";
     label.textContent = c.name;
     labelLayer.appendChild(label);
 
     const sc = {
-      name: c.name, t, p, trail, marker, label, mesh: marker,
+      name: c.name, t, p, trail, marker, leader, label, mesh: marker,
       infoHTML: () => {
         // mission metadata rides in the JSON (fields absent in pre-07/02 data)
         const meta =

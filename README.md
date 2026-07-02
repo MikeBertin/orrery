@@ -57,10 +57,13 @@ this can't do is sub-second live tracking — meaningless at AU scale anyway.
   `comets` layer toggles; PHAs highlighted red. **This proves the static-Pages +
   live-data architecture end to end.**
 - **M4 — spacecraft (Tier 3)** ✅ *(built)*: [tools/fetch_spacecraft.py](tools/fetch_spacecraft.py)
-  pulls sampled state vectors from **JPL Horizons** for 10 active missions
+  pulls sampled state vectors from **JPL Horizons** for 13 active missions
   (Voyagers, New Horizons, Parker, JWST, Juno, Lucy, Solar Orbiter, Europa
-  Clipper, Psyche) → `web/data/spacecraft.json`; the daily Action refreshes
-  them. Client draws each craft's trajectory **trail** + a marker that
+  Clipper, Psyche, BepiColombo, Hera, OSIRIS-APEX — the last en route to
+  Apophis for the 2029 flyby) → `web/data/spacecraft.json`; the daily Action
+  refreshes them, self-clamping each query to the SPK coverage Horizons
+  reports. A craft pushed off its planet for legibility (JWST at L2) gets a
+  leader line back to it. Client draws each craft's trajectory **trail** + a marker that
   interpolates between samples and appears only within its data window.
   `spacecraft` toggle.
 - **M5 — polish & ship** *(in progress)*: ✅ label collision-avoidance

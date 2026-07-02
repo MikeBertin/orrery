@@ -145,6 +145,9 @@
     .row.top{gap:6px}
     .ctrls{gap:4px}
     .speed{min-width:40px;font-size:10px}
+    /* freshness chip rides inside the HUD on phones (orrery.js reparents it) */
+    .hud #data-status{display:block;text-align:center;font-family:var(--mono);
+      font-size:10px;color:#5a5a6c}
   }
 </style>
 </head>
@@ -225,6 +228,6 @@
     }
   }
   </script>
-  <script type="module" src="./orrery.js?v=m25"></script>
+  <script type="module" src="./orrery.js?v=m26"></script>
 </body>
 </html>

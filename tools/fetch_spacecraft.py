@@ -12,7 +12,7 @@ Output: web/data/spacecraft.json
   { "generated": <ISO8601>,
     "craft": [ { "name","color","launch","agency","mission","t":[JD…],"p":[x,y,z, …] }, … ] }
 """
-import json, sys, time, urllib.parse, urllib.request
+import json, re, sys, time, urllib.parse, urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -43,6 +43,12 @@ CRAFT = [
      "2024-10-14", "NASA", "En route to Europa — ocean-habitability survey (arrives 2030)"),
     ("-255", "Psyche",             "#cfd0d8", "2023-10-14", "2029-06-01", "10 d",
      "2023-10-13", "NASA", "En route to the metal asteroid 16 Psyche (arrives 2029)"),
+    ("-121", "BepiColombo",        "#e8b46a", "2018-10-21", "2026-11-01", "5 d",
+     "2018-10-20", "ESA/JAXA", "Twin Mercury orbiters — arriving Nov 2026 after nine flybys"),
+    ("-91",  "Hera",               "#9fe08f", "2024-10-08", "2027-06-01", "5 d",
+     "2024-10-07", "ESA", "Surveying Didymos–Dimorphos, the asteroid DART deflected (arrives Dec 2026)"),
+    ("-64",  "OSIRIS-APEX",        "#ff9ec0", "2023-09-25", "2029-09-01", "10 d",
+     "2016-09-08", "NASA", "OSIRIS-REx extended — chasing Apophis to its 2029 Earth flyby"),
 ]
 
 
@@ -65,6 +71,29 @@ def horizons_vectors(cmd, start, stop, step):
                 raise
             print(f"    retry {attempt+1} ({e})", file=sys.stderr)
             time.sleep(2 * (attempt + 1))
+
+
+def fetch_window(cmd, start, stop, step):
+    """Query vectors; if Horizons rejects the window because the craft's SPK
+    coverage ends earlier (or starts later) than requested, clamp to the
+    boundary it reports and retry. Keeps CRAFT windows generous without
+    breaking when a mission's kernel ends (e.g. Hera stops at rendezvous)."""
+    for _ in range(3):
+        text = horizons_vectors(cmd, start, stop, step)
+        if "$$SOE" in text:
+            return text
+        m = re.search(r"No ephemeris for target .* after A\.D\. (\d{4}-[A-Za-z]{3}-\d{2})", text)
+        if m:
+            stop = m.group(1)
+            print(f"    coverage ends {stop}; clamping", file=sys.stderr)
+            continue
+        m = re.search(r"No ephemeris for target .* prior to A\.D\. (\d{4}-[A-Za-z]{3}-\d{2})", text)
+        if m:
+            start = m.group(1)
+            print(f"    coverage starts {start}; clamping", file=sys.stderr)
+            continue
+        return text
+    return text
 
 
 def parse_vectors(text):
@@ -91,7 +120,7 @@ def main():
     for cmd, name, color, start, stop, step, launch, agency, mission in CRAFT:
         print(f"→ {name} ({cmd})", file=sys.stderr)
         try:
-            text = horizons_vectors(cmd, start, stop, step)
+            text = fetch_window(cmd, start, stop, step)
         except Exception as e:
             print(f"    FAILED: {e}", file=sys.stderr)
             continue
