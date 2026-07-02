@@ -9,6 +9,11 @@
 <meta property="og:url" content="https://mikebertin.github.io/orrery/">
 <meta property="og:title" content="Orrery — The Solar System in 3D">
 <meta property="og:description" content="The solar system plotted in real 3D from JPL orbital data. Scrub through a century of time and watch the planets move.">
+<meta property="og:image" content="https://mikebertin.github.io/orrery/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://mikebertin.github.io/orrery/og.jpg">
 <style>
   :root{
     --bg:#06060c; --panel:#11111b; --panel2:#171724; --line:#23232f;
@@ -93,7 +98,10 @@
   #info{position:fixed;top:20px;right:24px;z-index:6;width:260px;
     background:rgba(17,17,27,.86);backdrop-filter:blur(14px);border:1px solid var(--line);
     border-radius:14px;padding:16px 17px;box-shadow:0 30px 60px -30px #000}
-  #info h2{margin:0 0 12px;font-size:18px;letter-spacing:-.2px}
+  #info h2{margin:0 0 12px;font-size:18px;letter-spacing:-.2px;padding-right:26px}
+  .info-x{position:absolute;top:10px;right:10px;min-width:0;padding:3px 8px;font-size:11px;
+    color:var(--muted);border-radius:7px}
+  .info-x:hover{color:#fff}
   #info-body div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line);
     font-size:12px}
   #info-body span{color:var(--muted)}
@@ -115,6 +123,25 @@
   .results.show{display:flex}
   .results div{font-family:var(--mono);font-size:12px;color:var(--muted);padding:7px 12px;cursor:pointer}
   .results div:hover,.results div.sel{background:var(--panel2);color:var(--ink)}
+
+  /* mobile / narrow screens — compact chrome, give the scene the pixels.
+     (Touch itself is native: OrbitControls does 1-finger orbit + pinch zoom,
+     and picking/labels use pointer events.) */
+  @media (max-width:700px){
+    .brand{top:12px;left:14px}
+    .brand h1{font-size:18px}
+    .search{top:56px;left:14px;width:170px}
+    .ca-panel{left:14px;top:102px;width:min(240px,64vw)}
+    .ca-list{max-height:26vh}
+    #info{top:52px;right:12px;left:auto;width:min(300px,calc(100vw - 24px))}
+    .hint{display:none}
+    .hud{bottom:10px;width:96vw;padding:10px 12px;gap:8px;border-radius:13px}
+    .date{font-size:14px}
+    button{font-size:11px;padding:6px 8px;border-radius:8px}
+    button.icon{min-width:32px}
+    .opt input[type=range]{width:56px}
+    .speed{min-width:56px;font-size:11px}
+  }
 </style>
 </head>
 <body>
@@ -138,6 +165,7 @@
   </div>
 
   <div id="info" hidden>
+    <button id="info-x" class="info-x" title="deselect (esc)">✕</button>
     <h2 id="info-name">—</h2>
     <div id="info-body"></div>
   </div>
@@ -190,6 +218,6 @@
     }
   }
   </script>
-  <script type="module" src="./orrery.js?v=m21"></script>
+  <script type="module" src="./orrery.js?v=m22"></script>
 </body>
 </html>

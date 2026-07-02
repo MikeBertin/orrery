@@ -626,6 +626,7 @@ addEventListener("keydown", (e) => {
   if (e.key === "h" || e.key === "H") recenter();
 });
 document.getElementById("recenter").onclick = recenter;
+document.getElementById("info-x").onclick = clearFocus;   // touch-friendly esc
 
 // ---- search / go-to --------------------------------------------------------
 const searchEl = document.getElementById("search");
@@ -1089,6 +1090,8 @@ async function loadApproaches() {
   approachLayer.visible = document.getElementById("approaches")?.classList.contains("on") ?? true;
   buildApproachList();
   updateApproaches(julianDate(simDate));
+  if (matchMedia("(max-width: 700px)").matches)   // phones: start the list collapsed
+    document.getElementById("approach-panel").classList.add("collapsed");
 
   // The 2029 Apophis pass (0.10 LD) is the showpiece — one click cues it up:
   // jump to 3 days before closest approach, focus it, play at 1 d/s so the
