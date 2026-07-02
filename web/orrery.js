@@ -1033,20 +1033,28 @@ async function loadSpacecraft() {
 
     const sc = {
       name: c.name, t, p, trail, marker, leader, label, mesh: marker,
-      infoHTML: () => {
+      infoHTML: (date) => {
         // mission metadata rides in the JSON (fields absent in pre-07/02 data)
         const meta =
           (c.mission ? `<div><span>Mission</span><b>${c.mission}</b></div>` : "") +
           (c.launch ? `<div><span>Launched</span><b>${c.launch}</b></div>` : "") +
-          (c.agency ? `<div><span>Agency</span><b>${c.agency}</b></div>` : "");
+          (c.agency ? `<div><span>Agency</span><b>${c.agency}</b></div>` : "") +
+          (c.size ? `<div><span>Size</span><b>${c.size}</b></div>` : "") +
+          (c.mass ? `<div><span>Mass at launch</span><b>${c.mass}</b></div>` : "");
         const q = sc.lastPos;
         if (!q) return `<div><span>Type</span><b>Spacecraft</b></div>` + meta +
           `<div><span>Status</span><b>outside data window</b></div>`;
-        const r = Math.hypot(q.x, q.y, q.z), min = r * 499 / 60;
-        const lt = min > 90 ? `${(min/60).toFixed(1)} h` : `${min.toFixed(1)} min`;
+        const r = Math.hypot(q.x, q.y, q.z);
+        const pe = planetPosition(PLANETS.earth, date);
+        const dE = Math.hypot(q.x - pe.x, q.y - pe.y, q.z - pe.z);
+        // craft parked near Earth (JWST at L2) read better in km; far ones in AU
+        const dEtxt = dE < 0.05 ? `${Math.round(dE * 149597871).toLocaleString()} km` : `${dE.toFixed(2)} AU`;
+        const lt = (au) => { const s = au * 499.0;   // light seconds per AU
+          return s < 90 ? `${s.toFixed(1)} s` : s < 5400 ? `${(s / 60).toFixed(1)} min` : `${(s / 3600).toFixed(1)} h`; };
         return `<div><span>Type</span><b>Spacecraft</b></div>` + meta +
           `<div><span>Distance from Sun</span><b>${r.toFixed(2)} AU</b></div>` +
-          `<div><span>Light time from Sun</span><b>${lt}</b></div>`;
+          `<div><span>Distance from Earth</span><b>${dEtxt}</b></div>` +
+          `<div><span>Light time from Earth</span><b>${lt(dE)}</b></div>`;
       },
     };
     label.addEventListener("click", () => focusTarget(sc));

@@ -19,36 +19,49 @@ from pathlib import Path
 API = "https://ssd.jpl.nasa.gov/api/horizons.api"
 OUT = Path(__file__).resolve().parent.parent / "web" / "data"
 
-# id (NAIF) · name · colour · window · step · launch · agency · mission.
-# Windows are generous; Horizons clamps to each craft's available SPK coverage
-# and we keep whatever returns. Metadata feeds the click info cards.
+# id (NAIF) · name · colour · window · step · launch · agency · mission ·
+# size · launch mass. Windows are generous; fetch_window clamps to each
+# craft's available SPK coverage. Metadata feeds the click info cards.
 CRAFT = [
     ("-31",  "Voyager 1",          "#8fd0ff", "1990-01-01", "2035-01-01", "60 d",
-     "1977-09-05", "NASA", "Grand Tour flybys; now in interstellar space — the farthest human-made object"),
+     "1977-09-05", "NASA", "Grand Tour flybys; now in interstellar space — the farthest human-made object",
+     "3.7 m dish + booms", "825 kg"),
     ("-32",  "Voyager 2",          "#a7bcff", "1990-01-01", "2035-01-01", "60 d",
-     "1977-08-20", "NASA", "Only craft to visit Uranus & Neptune; in interstellar space since 2018"),
+     "1977-08-20", "NASA", "Only craft to visit Uranus & Neptune; in interstellar space since 2018",
+     "3.7 m dish + booms", "825 kg"),
     ("-98",  "New Horizons",       "#ff9de2", "2006-02-01", "2035-01-01", "30 d",
-     "2006-01-19", "NASA", "First Pluto flyby (2015), then Arrokoth (2019); leaving the system"),
+     "2006-01-19", "NASA", "First Pluto flyby (2015), then Arrokoth (2019); leaving the system",
+     "2.2×2.7 m — piano-sized", "478 kg"),
     ("-96",  "Parker Solar Probe", "#ffce6b", "2018-08-13", "2026-08-01", "2 d",
-     "2018-08-12", "NASA", "Skims the corona at ~6 M km — the fastest human-made object"),
+     "2018-08-12", "NASA", "Skims the corona at ~6 M km — the fastest human-made object",
+     "3 m tall · 2.3 m heat shield", "685 kg"),
     ("-170", "JWST",               "#7fe0c8", "2022-01-25", "2027-06-01", "3 d",
-     "2021-12-25", "NASA/ESA/CSA", "Infrared space telescope orbiting Sun–Earth L2"),
+     "2021-12-25", "NASA/ESA/CSA", "Infrared space telescope orbiting Sun–Earth L2",
+     "6.5 m mirror · 21×14 m sunshield", "6,161 kg"),
     ("-61",  "Juno",               "#ff8f5a", "2016-07-05", "2025-09-15", "3 d",
-     "2011-08-05", "NASA", "Jupiter polar orbiter — interior, gravity and aurorae"),
+     "2011-08-05", "NASA", "Jupiter polar orbiter — interior, gravity and aurorae",
+     "20 m across (solar arrays)", "3,625 kg"),
     ("-49",  "Lucy",               "#c8a0ff", "2021-10-17", "2033-01-01", "10 d",
-     "2021-10-16", "NASA", "Touring the Jupiter Trojan asteroids — 8+ flybys through 2033"),
+     "2021-10-16", "NASA", "Touring the Jupiter Trojan asteroids — 8+ flybys through 2033",
+     "13 m tip-to-tip", "1,550 kg"),
     ("-144", "Solar Orbiter",      "#ffe08a", "2020-02-11", "2029-01-01", "4 d",
-     "2020-02-10", "ESA/NASA", "Close-in solar observatory imaging the Sun's poles"),
+     "2020-02-10", "ESA/NASA", "Close-in solar observatory imaging the Sun's poles",
+     "18 m across (arrays)", "1,800 kg"),
     ("-159", "Europa Clipper",     "#9fe0ff", "2024-10-15", "2030-06-01", "10 d",
-     "2024-10-14", "NASA", "En route to Europa — ocean-habitability survey (arrives 2030)"),
+     "2024-10-14", "NASA", "En route to Europa — ocean-habitability survey (arrives 2030)",
+     "30.5 m across — largest planetary probe", "6,065 kg"),
     ("-255", "Psyche",             "#cfd0d8", "2023-10-14", "2029-06-01", "10 d",
-     "2023-10-13", "NASA", "En route to the metal asteroid 16 Psyche (arrives 2029)"),
+     "2023-10-13", "NASA", "En route to the metal asteroid 16 Psyche (arrives 2029)",
+     "24.8 m across (arrays)", "2,608 kg"),
     ("-121", "BepiColombo",        "#e8b46a", "2018-10-21", "2026-11-01", "5 d",
-     "2018-10-20", "ESA/JAXA", "Twin Mercury orbiters — arriving Nov 2026 after nine flybys"),
+     "2018-10-20", "ESA/JAXA", "Twin Mercury orbiters — arriving Nov 2026 after nine flybys",
+     "6.3 m stack · 30 m arrays", "4,100 kg"),
     ("-91",  "Hera",               "#9fe08f", "2024-10-08", "2027-06-01", "5 d",
-     "2024-10-07", "ESA", "Surveying Didymos–Dimorphos, the asteroid DART deflected (arrives Dec 2026)"),
+     "2024-10-07", "ESA", "Surveying Didymos–Dimorphos, the asteroid DART deflected (arrives Dec 2026)",
+     "1.6×1.7 m box + 5 m arrays", "1,801 kg"),
     ("-64",  "OSIRIS-APEX",        "#ff9ec0", "2023-09-25", "2029-09-01", "10 d",
-     "2016-09-08", "NASA", "OSIRIS-REx extended — chasing Apophis to its 2029 Earth flyby"),
+     "2016-09-08", "NASA", "OSIRIS-REx extended — chasing Apophis to its 2029 Earth flyby",
+     "6.2 m across (arrays)", "2,110 kg"),
 ]
 
 
@@ -117,7 +130,7 @@ def parse_vectors(text):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     out = []
-    for cmd, name, color, start, stop, step, launch, agency, mission in CRAFT:
+    for cmd, name, color, start, stop, step, launch, agency, mission, size, mass in CRAFT:
         print(f"→ {name} ({cmd})", file=sys.stderr)
         try:
             text = fetch_window(cmd, start, stop, step)
@@ -130,7 +143,8 @@ def main():
             print(f"    no vectors ({note})", file=sys.stderr)
             continue
         out.append({"name": name, "color": color, "launch": launch,
-                    "agency": agency, "mission": mission, "t": t, "p": p})
+                    "agency": agency, "mission": mission,
+                    "size": size, "mass": mass, "t": t, "p": p})
         print(f"    {len(t)} samples", file=sys.stderr)
         time.sleep(0.5)   # be polite to Horizons
 
