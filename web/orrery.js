@@ -594,7 +594,14 @@ function syncScrub() {
 
 document.getElementById("slower").onclick = () => { demoCue = null; setSpeedIdx(speedIdx - 1); };
 document.getElementById("faster").onclick = () => { demoCue = null; setSpeedIdx(speedIdx + 1); };
-ui.play.onclick = () => { playing = !playing; ui.play.textContent = playing ? "⏸" : "▶"; };
+ui.play.onclick = () => {
+  playing = !playing;
+  // "paused" can also mean speed 0 (shared links & approach jumps hold their
+  // moment that way) — resuming from that state must un-zero the speed too,
+  // or play does nothing and the button looks broken.
+  if (playing && speedDays === 0) setSpeedIdx(SPEEDS.indexOf(1));
+  ui.play.textContent = playing ? "⏸" : "▶";
+};
 document.getElementById("now").onclick = () => { demoCue = null; simDate = new Date(); setSpeedIdx(SPEEDS.indexOf(1)); smallDirty = true; };
 document.getElementById("log").onclick = (e) => {
   logScale = !logScale;
@@ -1248,6 +1255,7 @@ function goToApproach(a) {
   demoCue = null;   // the demo re-arms after this call; a plain row click just cancels
   simDate = new Date((a.approach.jd - 2440587.5) * 86400000);   // jump to the moment
   setSpeedIdx(SPEEDS.indexOf(0));                                // pause on it
+  playing = false; ui.play.textContent = "▶";                    // show it honestly
   smallDirty = true;
   approachLayer.visible = true;
   document.getElementById("approaches").classList.add("on");
@@ -1412,6 +1420,7 @@ function syncHash(now) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(dpart)) {
     simDate = new Date(dpart + "T00:00:00Z");
     setSpeedIdx(SPEEDS.indexOf(0));            // hold the shared moment
+    playing = false; ui.play.textContent = "▶";  // …and show it honestly
     smallDirty = true;
   }
   if (name) {
