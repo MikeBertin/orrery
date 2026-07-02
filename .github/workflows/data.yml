@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: write
+  actions: write     # to dispatch the Pages deploy after committing data
 
 concurrency:
   group: orrery-data
@@ -48,13 +49,18 @@ jobs:
         run: python3 tools/fetch_famous_comets.py
 
       - name: Commit if data changed
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           if [ -n "$(git status --porcelain web/data)" ]; then
             git config user.name  "orrery-bot"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add web/data/*.json
-            git commit -m "data: refresh small bodies $(date -u +%F)"
+            git commit -m "data: refresh $(date -u +%F)"
             git push
+            # GITHUB_TOKEN pushes deliberately don't fire `on: push` workflows
+            # (loop guard), so kick the Pages deploy explicitly.
+            gh workflow run pages.yml --ref main
           else
             echo "No changes in web/data — nothing to commit."
           fi
