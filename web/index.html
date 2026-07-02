@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orrery — The Solar System in 3D</title>
+<meta name="description" content="Every body in the solar system we can track, plotted in real 3D from JPL orbital data — scrub through time and watch the planets move.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mikebertin.github.io/orrery/">
+<meta property="og:title" content="Orrery — The Solar System in 3D">
+<meta property="og:description" content="The solar system plotted in real 3D from JPL orbital data. Scrub through a century of time and watch the planets move.">
+<style>
+  :root{
+    --bg:#06060c; --panel:#11111b; --panel2:#171724; --line:#23232f;
+    --ink:#e9e9f1; --muted:#8a8a9c; --accent:#7cc4ff; --accent2:#ffc266;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+  #scene{position:fixed;inset:0;width:100vw;height:100vh;display:block}
+
+  /* title */
+  .brand{position:fixed;top:20px;left:24px;z-index:5;pointer-events:none}
+  .brand .badge{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
+  .brand h1{font-size:26px;margin:3px 0 0;letter-spacing:-.3px;font-weight:650;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* floating body labels */
+  #labels{position:fixed;inset:0;z-index:3;pointer-events:none}
+  .label{position:absolute;transform:translate(10px,-50%);font-family:var(--mono);font-size:11px;
+    letter-spacing:.5px;color:#cfcfdb;white-space:nowrap;pointer-events:auto;cursor:pointer;
+    text-shadow:0 0 2px #000,0 0 4px #000,0 0 7px #000,0 1px 2px #000;transition:color .15s}
+  .label:hover,.label.active{color:#fff}
+  .label.axis{color:var(--accent);opacity:.92;letter-spacing:1px}
+  .label.gc{color:var(--accent2)}
+  .label.sun{color:#74e0a8;font-weight:600}
+  .label.dwarf{color:#b9b3c4;font-size:10.5px}
+  .label.moon{color:#9fb6c4;font-size:10px}
+  .label.craft{color:#8fe0d0;font-size:10.5px;letter-spacing:.6px}
+  .label.approach{color:#ff8fc4;font-size:10.5px;font-weight:600}
+  .label.interstellar{font-size:10.5px;font-weight:700;letter-spacing:.5px}
+
+  /* close-approach panel */
+  .ca-panel{position:fixed;left:24px;top:132px;z-index:6;width:250px;
+    background:rgba(17,17,27,.86);backdrop-filter:blur(14px);border:1px solid var(--line);
+    border-radius:12px;overflow:hidden;box-shadow:0 24px 50px -26px #000}
+  .ca-panel.hidden{display:none}
+  .ca-head{font-family:var(--mono);font-size:11px;color:#ff8fc4;padding:10px 12px;cursor:pointer;
+    border-bottom:1px solid var(--line);letter-spacing:.4px}
+  .ca-head .ca-sub{color:var(--muted)}
+  .ca-demo{font-family:var(--mono);font-size:11px;color:#ffd166;padding:7px 12px;cursor:pointer;
+    border-top:1px solid var(--panel2)}
+  .ca-demo:hover{background:var(--panel2)}
+  .ca-panel.collapsed .ca-demo{display:none}
+  .ca-panel.collapsed .ca-list{display:none}
+  .ca-list{max-height:34vh;overflow-y:auto}
+  .ca-row{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;
+    font-family:var(--mono);font-size:11px;border-bottom:1px solid rgba(35,35,47,.5)}
+  .ca-row:hover{background:var(--panel2)}
+  .ca-date{color:var(--muted);width:82px;flex:none}
+  .ca-name{color:var(--ink);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ca-ld{color:var(--muted);width:38px;text-align:right;flex:none}
+  .ca-ld.ca-orange{color:#ffb03c}
+  .ca-ld.ca-red{color:#ff5a5a;font-weight:700}
+  .label::before{content:"";position:absolute;left:-7px;top:50%;width:4px;height:4px;border-radius:50%;
+    background:currentColor;transform:translateY(-50%)}
+
+  /* bottom time HUD */
+  .hud{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:6;
+    display:flex;flex-direction:column;gap:10px;width:min(680px,92vw);
+    background:rgba(17,17,27,.82);backdrop-filter:blur(14px);border:1px solid var(--line);
+    border-radius:16px;padding:14px 18px;box-shadow:0 30px 60px -30px #000}
+  .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;row-gap:9px}
+  .row.top{justify-content:space-between}
+  .date{font-family:var(--mono);font-size:18px;letter-spacing:1px}
+  .speed{font-family:var(--mono);font-size:12px;color:var(--muted);min-width:78px;text-align:center}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+    background:#fff;cursor:pointer;box-shadow:0 0 0 3px rgba(124,196,255,.35)}
+  button{font-family:var(--mono);font-size:12px;color:var(--ink);background:var(--panel2);
+    border:1px solid var(--line);border-radius:9px;padding:7px 11px;cursor:pointer;transition:.12s}
+  button:hover{border-color:var(--accent);color:#fff}
+  button.icon{min-width:38px;font-size:14px}
+  button.on{border-color:var(--accent);color:var(--accent)}
+  .ctrls{display:flex;gap:7px;align-items:center}
+  .spacer{flex:1}
+  .opt{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .opt input[type=range]{width:78px}
+
+  /* info card */
+  #info{position:fixed;top:20px;right:24px;z-index:6;width:260px;
+    background:rgba(17,17,27,.86);backdrop-filter:blur(14px);border:1px solid var(--line);
+    border-radius:14px;padding:16px 17px;box-shadow:0 30px 60px -30px #000}
+  #info h2{margin:0 0 12px;font-size:18px;letter-spacing:-.2px}
+  #info-body div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line);
+    font-size:12px}
+  #info-body span{color:var(--muted)}
+  #info-body b{font-family:var(--mono);font-weight:500}
+  .hint{position:fixed;bottom:20px;left:24px;z-index:5;font-family:var(--mono);font-size:11px;color:var(--muted);
+    line-height:1.7;pointer-events:none}
+  .hint .credit{color:#5a5a6c}
+
+  /* search / go-to */
+  .search{position:fixed;top:78px;left:24px;z-index:6;width:216px}
+  .search input{width:100%;font-family:var(--mono);font-size:12px;color:var(--ink);
+    background:rgba(17,17,27,.82);backdrop-filter:blur(14px);border:1px solid var(--line);
+    border-radius:10px;padding:8px 12px;outline:none;transition:border-color .15s}
+  .search input::placeholder{color:var(--muted)}
+  .search input:focus{border-color:var(--accent)}
+  .results{margin-top:6px;display:none;flex-direction:column;overflow:hidden;
+    background:rgba(17,17,27,.95);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:10px;
+    box-shadow:0 20px 40px -22px #000}
+  .results.show{display:flex}
+  .results div{font-family:var(--mono);font-size:12px;color:var(--muted);padding:7px 12px;cursor:pointer}
+  .results div:hover,.results div.sel{background:var(--panel2);color:var(--ink)}
+</style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div id="labels"></div>
+
+  <div class="brand">
+    <div class="badge">Orrery</div>
+    <h1>The Solar System in 3D</h1>
+  </div>
+
+  <div class="search">
+    <input id="search" type="text" placeholder="go to…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+
+  <div id="approach-panel" class="ca-panel">
+    <div id="approach-head" class="ca-head">⚠ Close approaches · <span id="approach-count">…</span> · <span class="ca-sub">click to jump · LD</span></div>
+    <div id="apophis-demo" class="ca-demo" hidden>▶ watch Apophis skim Earth · 2029</div>
+    <div id="approach-list" class="ca-list"></div>
+  </div>
+
+  <div id="info" hidden>
+    <h2 id="info-name">—</h2>
+    <div id="info-body"></div>
+  </div>
+
+  <div class="hint">
+    drag — orbit · scroll — zoom · click a body — focus · click Sun / H — recenter<br>
+    space — play/pause · ← → — speed · esc — deselect<br>
+    <span class="credit">data — JPL Horizons &amp; Small-Body Database · distances/sizes not to scale</span><br>
+    <span class="credit" id="data-status"></span>
+  </div>
+
+  <div class="hud">
+    <div class="row top">
+      <div class="date" id="date">—</div>
+      <div class="ctrls">
+        <button class="icon" id="slower" title="slower">⏪</button>
+        <button class="icon" id="play" title="play/pause">⏸</button>
+        <button class="icon" id="faster" title="faster">⏩</button>
+        <div class="speed" id="speed">+1 d/s</div>
+        <button id="now" title="jump to today">now</button>
+        <button class="icon" id="recenter" title="recenter on the Sun (H)">☉</button>
+      </div>
+    </div>
+    <input type="range" id="scrub" min="-1" max="1" step="0.00001" value="0">
+    <div class="row">
+      <button id="log" title="compress distances">log distance</button>
+      <button id="galaxy" class="on" title="Milky Way background">galaxy</button>
+      <button id="north" class="on" title="ecliptic north axis">north</button>
+      <button id="dwarfs" class="on" title="dwarf planets">dwarfs</button>
+      <button id="moons" class="on" title="major moons (orbits not to scale)">moons</button>
+      <button id="asteroids" class="on" title="largest main-belt asteroids">asteroids</button>
+      <button id="neos" class="on" title="near-Earth objects (PHAs in red)">NEOs</button>
+      <button id="comets" class="on" title="known comets">comets</button>
+      <button id="craft" class="on" title="active spacecraft (JPL Horizons)">spacecraft</button>
+      <button id="approaches" class="on" title="objects approaching Earth (JPL CAD)">⚠ approaches</button>
+      <button id="interstellar" class="on" title="interstellar visitors — 1I/'Oumuamua, 2I/Borisov, 3I/ATLAS">interstellar</button>
+      <div class="spacer"></div>
+      <label class="opt">body size
+        <input type="range" id="size" min="0.4" max="3" step="0.1" value="1">
+      </label>
+    </div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="./orrery.js?v=m19"></script>
+</body>
+</html>

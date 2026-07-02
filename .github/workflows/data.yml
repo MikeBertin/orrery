@@ -1,0 +1,53 @@
+name: Refresh Orrery data
+
+# The backend, with no server: this scheduled job runs in the cloud, pulls fresh
+# data from JPL, and commits the JSON — so the static GitHub Pages site serves
+# up-to-date small-body (Tier 2, SBDB) and spacecraft (Tier 3, Horizons) data.
+# The commit to main triggers the Pages deploy (pages.yml). Daily, because
+# spacecraft move; small-body elements rarely change day to day, and the
+# commit-if-changed guard skips no-op commits.
+
+on:
+  schedule:
+    - cron: "17 6 * * *"       # daily, 06:17 UTC
+  workflow_dispatch:            # allow manual runs
+
+permissions:
+  contents: write
+
+concurrency:
+  group: orrery-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch small bodies from JPL SBDB
+        run: python3 tools/fetch_smallbodies.py
+
+      - name: Fetch spacecraft from JPL Horizons
+        run: python3 tools/fetch_spacecraft.py
+
+      - name: Fetch Earth close approaches from JPL CAD
+        run: python3 tools/fetch_close_approaches.py
+
+      - name: Fetch famous comets from JPL SBDB
+        run: python3 tools/fetch_famous_comets.py
+
+      - name: Commit if data changed
+        run: |
+          if [ -n "$(git status --porcelain web/data)" ]; then
+            git config user.name  "orrery-bot"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add web/data/*.json
+            git commit -m "data: refresh small bodies $(date -u +%F)"
+            git push
+          else
+            echo "No changes in web/data — nothing to commit."
+          fi
