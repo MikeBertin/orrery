@@ -529,6 +529,23 @@ const pointer = new THREE.Vector2();
 const targets = [...bodies, ...moons];   // anything clickable/focusable
 
 function focusTarget(t) {
+  // A spacecraft outside its data window has no position — its marker sits
+  // hidden at the origin, so flying to it would dive INTO THE SUN. The user
+  // asked to see the craft: snap the clock to the nearest covered moment
+  // (same spirit as approach rows jumping to their date), then fly.
+  if (t.t && t.p) {
+    const jd = julianDate(simDate);
+    const t0 = t.t[0], t1 = t.t[t.t.length - 1];
+    if (jd <= t0 || jd >= t1) {
+      simDate = new Date(((jd <= t0 ? t0 + 0.5 : t1 - 0.5) - 2440587.5) * 86400000);
+      smallDirty = true;
+      updatePositions();
+      updateSpacecraft(julianDate(simDate));
+      updateApproaches(julianDate(simDate));
+      updateInterstellar();
+      updateFamousComets();
+    }
+  }
   focused = t;
   // Sprite markers (spacecraft/approaches/interstellar) keep a constant *screen*
   // size, so their world scale varies with camera distance — a fixed close
@@ -962,7 +979,13 @@ function rebuildTrails() {
 // camera distance — one place to tune every marker family's apparent size.
 const MARKER_PX = { craft: 0.028, approach: 0.013, approachNear: 0.017, interstellar: 0.02 };
 function markerScale(worldPos, k) {
-  return k * camera.position.distanceTo(worldPos);
+  // Constant-screen-size, but capped to a fraction of the marker's distance
+  // from the Sun: zoomed far out, an uncapped icon pinned at ~1 AU grows to
+  // world size ≫ its solar distance and visually swallows the Sun (JWST
+  // "inside the Sun"). The cap keeps it clear of the origin at any zoom —
+  // it shrinks toward a dot when the whole system is in frame, which is the
+  // honest rendering anyway; it uncaps again as the camera closes in.
+  return Math.min(k * camera.position.distanceTo(worldPos), worldPos.length() * 0.35);
 }
 
 // Legibility fudge: an object sitting almost on top of a planet (JWST at L2, a
