@@ -108,9 +108,18 @@
     font-size:12px}
   #info-body span{color:var(--muted)}
   #info-body b{font-family:var(--mono);font-weight:500}
-  .hint{position:fixed;bottom:20px;left:24px;z-index:5;font-family:var(--mono);font-size:11px;color:var(--muted);
+  /* right edge stops at the HUD's left edge (half of its 680px + a gap) so the
+     text wraps instead of running underneath it */
+  .hint{position:fixed;bottom:20px;left:24px;right:calc(50% + 354px);z-index:5;
+    font-family:var(--mono);font-size:11px;color:var(--muted);
     line-height:1.7;pointer-events:none}
   .hint .credit{color:#5a5a6c}
+  /* freshness chip when it rides inside the HUD (narrow screens — orrery.js
+     reparents it there whenever the hint is hidden) */
+  .hud #data-status{display:block;text-align:center;font-family:var(--mono);
+    font-size:10px;color:#5a5a6c}
+  /* below this the wrap column is too skinny to be useful */
+  @media (max-width:1080px){ .hint{display:none} }
 
   /* search / go-to */
   .search{position:fixed;top:78px;left:24px;z-index:6;width:216px}
@@ -136,7 +145,6 @@
     .ca-panel{left:14px;top:102px;width:min(240px,64vw)}
     .ca-list{max-height:26vh}
     #info{top:52px;right:12px;left:auto;width:min(300px,calc(100vw - 24px))}
-    .hint{display:none}
     .hud{bottom:10px;width:96vw;padding:10px 12px;gap:8px;border-radius:13px}
     .date{font-size:14px}
     button{font-size:11px;padding:6px 8px;border-radius:8px}
@@ -145,9 +153,6 @@
     .row.top{gap:6px}
     .ctrls{gap:4px}
     .speed{min-width:40px;font-size:10px}
-    /* freshness chip rides inside the HUD on phones (orrery.js reparents it) */
-    .hud #data-status{display:block;text-align:center;font-family:var(--mono);
-      font-size:10px;color:#5a5a6c}
   }
 </style>
 </head>
@@ -228,6 +233,6 @@
     }
   }
   </script>
-  <script type="module" src="./orrery.js?v=m29"></script>
+  <script type="module" src="./orrery.js?v=m30"></script>
 </body>
 </html>

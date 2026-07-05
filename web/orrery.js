@@ -778,9 +778,10 @@ function noteDataFail(name) {
   dataStatus.failed.push(name);
   renderDataStatus();
 }
-// Phones hide the whole .hint block (no room), which used to take the
+// Narrow screens hide the whole .hint block (no room), which used to take the
 // freshness chip with it — reparent the chip into the HUD there instead.
-const narrowMQ = matchMedia("(max-width: 700px)");
+// Keep this width in sync with the .hint display:none breakpoint in index.html.
+const narrowMQ = matchMedia("(max-width: 1080px)");
 function placeDataStatus() {
   const el = document.getElementById("data-status");
   (narrowMQ.matches ? document.querySelector(".hud") : document.querySelector(".hint")).appendChild(el);
