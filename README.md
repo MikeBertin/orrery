@@ -39,15 +39,6 @@ doesn't need fetching at all, giving a three-tier model:
 The time-scrubber works on Tier 1 across centuries for free. The only thing
 this can't do is sub-second live tracking — meaningless at AU scale anyway.
 
-## Locked decisions (2026-06-30)
-
-1. **Scope:** everything trackable, incl. active spacecraft.
-2. **Architecture:** static site on Pages; a scheduled GitHub Action is the
-   "backend" that fetches live data into committed JSON. No runtime server.
-3. **Time:** full time-scrubber (rewind / fast-forward / jump-to-date / now).
-4. **Stack:** vanilla JS + Three.js (CDN), no framework.
-5. **Codename:** Orrery.
-
 ## Milestones
 
 - **M1 — offline core** ✅ *(built)*: Three.js scene, Sun + 8 planets on real
