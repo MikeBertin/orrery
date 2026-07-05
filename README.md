@@ -2,13 +2,21 @@
 
 A live, scrubable 3D model of everything we can track in the solar system,
 plotted from real orbital data. Vanilla + Three.js, ships static to GitHub
-Pages. Sister project to **Lynceus** (JWST galaxy ML).
+Pages.
 
 **▶ Live: [mikebertin.github.io/orrery](https://mikebertin.github.io/orrery/)** —
 try [the Apophis 2029 flyby](https://mikebertin.github.io/orrery/#2029-04-13/Apophis)
 or [Halley's return](https://mikebertin.github.io/orrery/#2061-07-28/1P%2FHalley).
 
-> An *orrery* is a mechanical model of the solar system. This is the software one.
+> **Why "Orrery"?** An *orrery* is a clockwork model of the solar system —
+> planets on brass arms, geared to sweep their orbits at true relative speed.
+> The first modern one was built around 1704 by clockmakers George Graham and
+> Thomas Tompion; when instrument maker John Rowley copied it for his patron
+> Charles Boyle, 4th **Earl of Orrery**, the device took the earl's title (a
+> barony in County Cork, Ireland) as its name. This is the software one — the
+> brass arms are JPL orbital elements, and the gears are a time engine.
+
+[![The planets sweeping their orbits, the Apophis 2029 skim past Earth, the whole system and its Oort halo in log mode, and a fly-in to ringed Saturn](web/demo.gif)](https://mikebertin.github.io/orrery/)
 
 ## The "static site + real-time data" trick
 
@@ -32,7 +40,7 @@ this can't do is sub-second live tracking — meaningless at AU scale anyway.
 2. **Architecture:** static site on Pages; a scheduled GitHub Action is the
    "backend" that fetches live data into committed JSON. No runtime server.
 3. **Time:** full time-scrubber (rewind / fast-forward / jump-to-date / now).
-4. **Stack:** vanilla JS + Three.js (CDN), no framework. Chiron/Hermes house style.
+4. **Stack:** vanilla JS + Three.js (CDN), no framework.
 5. **Codename:** Orrery.
 
 ## Milestones
@@ -66,16 +74,17 @@ this can't do is sub-second live tracking — meaningless at AU scale anyway.
   leader line back to it. Client draws each craft's trajectory **trail** + a marker that
   interpolates between samples and appears only within its data window.
   `spacecraft` toggle.
-- **M5 — polish & ship** *(in progress)*: ✅ label collision-avoidance
+- **M5 — polish & ship** ✅ *(shipped)*: ✅ label collision-avoidance
   (priority-ranked, focused always wins), ✅ search / go-to box with smooth
   camera fly-to, ✅ JPL data credit, ✅ **data-freshness chip** (HUD shows the
   oldest `generated` stamp among the loaded JSONs, and calls out any layer
   whose fetch failed), ✅ **shareable URLs** (`#YYYY-MM-DD/Body`, e.g.
   `#2029-04-13/Apophis` — restores the date paused and flies to the body),
   ✅ **Apophis demo button** in the approaches panel (cues the 2029 pass:
-  jumps 3 days out, focuses, plays at 1 d/s). Remaining: OG image and **deploy
-  to `mikebertin.github.io/orrery`** (init repo + push so the data Actions
-  start running).
+  jumps 3 days out, focuses, plays at 1 d/s), ✅ OG social card + README demo
+  GIF (regenerate with [demo-capture.js](demo-capture.js)), ✅ **deployed to
+  [mikebertin.github.io/orrery](https://mikebertin.github.io/orrery/)** with
+  the data Actions running on schedule.
 - **Kuiper belt** ✅ *(built)*: ~6,400 trans-Neptunian objects from JPL SBDB
   (`sb-class=TNO`) through the same element→point-cloud pipeline as the
   asteroids — the icy ring at 30–50 AU plus the scattered disc, finally
