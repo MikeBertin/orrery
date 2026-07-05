@@ -16,7 +16,12 @@ or [Halley's return](https://mikebertin.github.io/orrery/#2061-07-28/1P%2FHalley
 > barony in County Cork, Ireland) as its name. This is the software one — the
 > brass arms are JPL orbital elements, and the gears are a time engine.
 
-[![The planets sweeping their orbits, the Apophis 2029 skim past Earth, the whole system and its Oort halo in log mode, and a fly-in to ringed Saturn](web/demo.gif)](https://mikebertin.github.io/orrery/)
+[![The solar system revolving at 30 days per second while the camera pans to reveal the Milky Way's galactic centre behind it](web/demo-wide.gif)](https://mikebertin.github.io/orrery/)
+
+<table><tr>
+<td width="50%"><a href="https://mikebertin.github.io/orrery/#2026-07-05/Jupiter"><img src="web/demo-jupiter.gif" alt="Close-up of Jupiter with its Galilean moons orbiting"></a></td>
+<td width="50%"><a href="https://mikebertin.github.io/orrery/#2029-04-13/Apophis"><img src="web/demo-apophis.gif" alt="Apophis threading past Earth on 2029-04-13, inside the geostationary ring"></a></td>
+</tr></table>
 
 ## The "static site + real-time data" trick
 
@@ -82,7 +87,7 @@ this can't do is sub-second live tracking — meaningless at AU scale anyway.
   `#2029-04-13/Apophis` — restores the date paused and flies to the body),
   ✅ **Apophis demo button** in the approaches panel (cues the 2029 pass:
   jumps 3 days out, focuses, plays at 1 d/s), ✅ OG social card + README demo
-  GIF (regenerate with [demo-capture.js](demo-capture.js)), ✅ **deployed to
+  GIFs (regenerate with [demo-capture.js](demo-capture.js)), ✅ **deployed to
   [mikebertin.github.io/orrery](https://mikebertin.github.io/orrery/)** with
   the data Actions running on schedule.
 - **Kuiper belt** ✅ *(built)*: ~6,400 trans-Neptunian objects from JPL SBDB
