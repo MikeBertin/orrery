@@ -1442,7 +1442,8 @@ function syncHash(now) {
   const dpart = cut < 0 ? raw : raw.slice(0, cut);
   const name = cut < 0 ? "" : decodeURIComponent(raw.slice(cut + 1));
   if (/^\d{4}-\d{2}-\d{2}$/.test(dpart)) {
-    simDate = new Date(dpart + "T00:00:00Z");
+    const d = new Date(dpart + "T00:00:00Z");
+    simDate = Number.isNaN(d.getTime()) ? new Date() : d;   // reject e.g. 2026-13-45
     setSpeedIdx(SPEEDS.indexOf(0));            // hold the shared moment
     playing = false; ui.play.textContent = "▶";  // …and show it honestly
     smallDirty = true;
@@ -1461,10 +1462,12 @@ function syncHash(now) {
 let last = performance.now();
 let lastOrbitT = null;
 function tick(now) {
+ try {
   const dt = (now - last) / 1000; last = now;
 
   if (playing && speedDays !== 0) {
     simDate = new Date(simDate.getTime() + speedDays * DAY * dt);
+    if (Number.isNaN(simDate.getTime())) { simDate = new Date(); playing = false; ui.play.textContent = "▶"; }
   }
 
   const T = updatePositions();
@@ -1506,7 +1509,10 @@ function tick(now) {
   if (focused) updateInfo();
 
   renderer.render(scene, camera);
-  requestAnimationFrame(tick);
+ } catch (e) {
+  console.error("frame error (rendering continues):", e);   // one bad frame must not kill the loop
+ }
+ requestAnimationFrame(tick);
 }
 
 function resize() {
