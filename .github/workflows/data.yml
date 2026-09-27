@@ -1,7 +1,7 @@
 name: Refresh Orrery data
 
 # The backend, with no server: this scheduled job runs in the cloud, pulls fresh
-# data from JPL, and commits the JSON — so the static GitHub Pages site serves
+# data from JPL, and commits the JSON, so the static GitHub Pages site serves
 # up-to-date small-body (Tier 2, SBDB) and spacecraft (Tier 3, Horizons) data.
 # The commit to main triggers the Pages deploy (pages.yml). Daily, because
 # spacecraft move; small-body elements rarely change day to day, and the
@@ -30,7 +30,7 @@ jobs:
           python-version: "3.12"
 
       # Each fetch is independent and the JSONs are already committed, so one
-      # flaky JPL endpoint shouldn't block the others — a failed layer just
+      # flaky JPL endpoint shouldn't block the others: a failed layer just
       # keeps yesterday's data (the site's freshness chip reports the oldest).
       - name: Fetch small bodies from JPL SBDB
         continue-on-error: true
@@ -62,5 +62,5 @@ jobs:
             # (loop guard), so kick the Pages deploy explicitly.
             gh workflow run pages.yml --ref main
           else
-            echo "No changes in web/data — nothing to commit."
+            echo "No changes in web/data: nothing to commit."
           fi
