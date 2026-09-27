@@ -35,7 +35,7 @@ doesn't need fetching at all, giving a three-tier model:
 
 | Tier | Bodies | Source | How | Refresh |
 |------|--------|--------|-----|---------|
-| **1 Analytic** | Sun, 8 planets, major moons | JPL Keplerian elements (baked into JS) | computed in-browser for any date | never (exact, offline) |
+| **1 Analytic** | Sun, 8 planets, major moons | JPL Keplerian elements (baked into JS) | computed in-browser for any date | never (accurate to arcminutes, offline) |
 | **2 Elements** | asteroids, NEOs, comets | JPL Small-Body DB | elements → JSON, Kepler-propagated client-side | weekly Action |
 | **3 Sampled** | spacecraft (Voyager, JWST, Parker, Juno…) | JPL Horizons | position tables → JSON, interpolated client-side | daily Action |
 
