@@ -121,6 +121,14 @@
     font-size:10px;color:#5a5a6c}
   /* below this the wrap column is too skinny to be useful */
   @media (max-width:1080px){ .hint{display:none} }
+  /* on narrow screens the credits hint is hidden, so the hub link moves to a corner badge */
+  .hub-m{display:none}
+  @media (max-width:1080px){
+    .hub-m{display:flex;position:fixed;top:14px;right:14px;z-index:5;align-items:center;gap:6px;
+      padding:6px 9px;border:1px solid var(--line);border-radius:999px;background:rgba(10,12,18,.72);
+      color:var(--muted);font-size:11.5px;text-decoration:none}
+    .hub-m img{width:12px;height:auto}
+  }
 
   /* search / go-to */
   .search{position:fixed;top:78px;left:24px;z-index:6;width:216px}
@@ -193,6 +201,7 @@
     <div id="info-body"></div>
   </div>
 
+  <a class="hub-m" href="https://mikebertin.github.io/"><img src="badge.svg" alt="" width="12" height="15">More builds</a>
   <div class="hint">
     drag: orbit · scroll: zoom · click a body: focus · click Sun / H: recenter<br>
     space: play/pause · ← →: speed · esc: deselect<br>
