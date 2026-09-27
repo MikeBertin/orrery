@@ -3,14 +3,14 @@
 JSON the Orrery web app propagates client-side.
 
 This is the payload of the M3 GitHub Action (Tier 2 of the data model): it runs
-in the cloud on a schedule, hits JPL, and commits the JSON — so the static
+in the cloud on a schedule, hits JPL and commits the JSON, so the static
 GitHub Pages site serves "live" small-body data with no server.
 
 Outputs (to web/data/):
-  asteroids.json  — the largest main-belt asteroids (bright => big)
-  neos.json       — near-Earth objects (PHAs flagged)
-  comets.json     — numbered/known comets
-  tnos.json       — trans-Neptunian objects (the Kuiper belt & scattered disc)
+  asteroids.json: the largest main-belt asteroids (bright => big)
+  neos.json:      near-Earth objects (PHAs flagged)
+  comets.json:    numbered/known comets
+  tnos.json:      trans-Neptunian objects (the Kuiper belt & scattered disc)
 
 Compact schema per file:
   { "generated": <ISO8601>, "epoch_common": <JD or null>,
@@ -102,15 +102,15 @@ def main():
     fetch("asteroids", {**common, "sb-kind": "a",
                         "sb-cdata": json.dumps({"AND": ["H|LT|12"]})})
 
-    # Near-Earth objects — cap to the larger/brighter ones so the layer stays
+    # Near-Earth objects: cap to the larger/brighter ones so the layer stays
     # legible (PHAs are flagged for highlighting).
     fetch("neos", {**common, "sb-group": "neo",
                    "sb-cdata": json.dumps({"AND": ["H|LT|19"]})})
 
-    # Comets — numbered/known; their eccentric, inclined orbits are iconic.
+    # Comets: numbered/known; their eccentric, inclined orbits are iconic.
     fetch("comets", {**common, "sb-kind": "c"})
 
-    # Trans-Neptunian objects — the Kuiper belt (30–50 AU) + scattered disc.
+    # Trans-Neptunian objects: the Kuiper belt (30–50 AU) + scattered disc.
     # No H cut: the entire catalogued population is only a few thousand
     # objects, and the belt ring needs the density to read as a belt.
     fetch("tnos", {**common, "sb-class": "TNO"})

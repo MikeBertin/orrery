@@ -1,9 +1,9 @@
-// ephem.js — analytic heliocentric ephemeris for the major planets.
+// ephem.js: analytic heliocentric ephemeris for the major planets.
 //
 // Uses the JPL "Keplerian Elements for Approximate Positions of the Major
 // Planets" table (E.M. Standish, JPL/Caltech). Each element is a value at
 // J2000 plus a linear rate per Julian century. Valid 1800 AD – 2050 AD with
-// accuracy of a few arcminutes — more than enough to plot the solar system,
+// accuracy of a few arcminutes, more than enough to plot the solar system,
 // and it needs no network and no data files: positions for ANY date are
 // computed in the browser. That is what makes the time-scrubber free.
 //
@@ -136,7 +136,7 @@ export const DWARFS = {
 };
 
 // ---------------------------------------------------------------------------
-// Interstellar objects — visitors from beyond the solar system, on HYPERBOLIC
+// Interstellar objects: visitors from beyond the solar system, on HYPERBOLIC
 // orbits (e > 1, unbound: they pass through once and leave). Elements from JPL
 // SBDB: q perihelion distance (AU), e, i/om/w (deg), tp perihelion time (JD).
 // size = published estimates (these never got radar; brightness/shape models)
@@ -196,7 +196,7 @@ export function smallBodyPosition(el, date) {
   return orbitalToEcliptic(el.a, el.e, el.w, el.i, el.om, E);
 }
 
-// Full orbit ellipse (AU) for a small body — sweeps eccentric anomaly.
+// Full orbit ellipse (AU) for a small body; sweeps eccentric anomaly.
 export function smallBodyOrbit(el, n = 256) {
   const pts = [];
   for (let k = 0; k <= n; k++) pts.push(orbitalToEcliptic(el.a, el.e, el.w, el.i, el.om, (k / n) * 360));
@@ -209,7 +209,7 @@ export function planetPosition(planet, date) {
   return positionFromElements(elementsAt(planet, T));
 }
 
-// Sample a full orbit ellipse at the given epoch — sweeps eccentric anomaly
+// Sample a full orbit ellipse at the given epoch. Sweeps eccentric anomaly
 // 0..2π using the elements resolved at T. Returns array of {x,y,z} in AU.
 export function orbitSamples(planet, T, n = 256) {
   const k = elementsAt(planet, T);

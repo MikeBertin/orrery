@@ -1,4 +1,4 @@
-// orrery.js — the 3D solar-system renderer and time engine (M1).
+// orrery.js: the 3D solar-system renderer and time engine (M1).
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Line2 } from "three/addons/lines/Line2.js";
@@ -6,8 +6,8 @@ import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
 import { PLANETS, planetPosition, orbitSamples, centuriesSinceJ2000, julianDate,
          DWARFS, smallBodyPosition, smallBodyOrbit,
-         INTERSTELLAR, interstellarPosition, interstellarPath } from "./ephem.js?v=m10";
-import * as TEX from "./textures.js?v=m9";
+         INTERSTELLAR, interstellarPosition, interstellarPath } from "./ephem.js?v=m11";
+import * as TEX from "./textures.js?v=m10";
 
 // per-planet surface texture + axial tilt (deg) + sidereal rotation (days;
 // negative = retrograde). Drives the 3D look and the daily spin.
@@ -47,7 +47,7 @@ function toScene(p) {
   return new THREE.Vector3(p.x * s, p.z * s, -p.y * s);
 }
 
-// planet visual sizes — sqrt of true radius, clamped, so Jupiter reads bigger
+// planet visual sizes: sqrt of true radius, clamped, so Jupiter reads bigger
 // than Mercury without dwarfing the scene.
 function bodySize(planet) {
   return THREE.MathUtils.clamp(Math.sqrt(planet.radius) * 0.7, 0.7, 4.2) * sizeBoost;
@@ -66,7 +66,7 @@ camera.position.set(0, 380, 620);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
-// Stay well inside the sky sphere (SKY_R=32000) — zooming past the Milky Way
+// Stay well inside the sky sphere (SKY_R=32000); zooming past the Milky Way
 // band breaks the illusion. Linear mode still fits Voyager 1 (~170 AU ≈ 6800
 // units) with margin; log mode compresses everything (Oort shell ≈ 790) so it
 // gets a much tighter leash. Kept in sync by the log toggle.
@@ -105,8 +105,8 @@ const corona = new THREE.Sprite(new THREE.SpriteMaterial({
 corona.scale.setScalar(34); sun.add(corona);
 
 // ---- galactic frame --------------------------------------------------------
-// "North" for the solar system is the ECLIPTIC north pole — the axis normal to
-// Earth's orbital plane — which in this scene is +Y. The Milky Way, however,
+// "North" for the solar system is the ECLIPTIC north pole (the axis normal to
+// Earth's orbital plane), which in this scene is +Y. The Milky Way, however,
 // is tilted ~60° to the ecliptic, with its centre toward Sagittarius. To place
 // it correctly we build the galaxy in galactic coordinates and rotate it
 // through the real galactic → equatorial → ecliptic → scene chain.
@@ -131,7 +131,7 @@ function galacticToScene() {
         cols[0].y, cols[1].y, cols[2].y, 0,
         cols[0].z, cols[1].z, cols[2].z, 0,
         0, 0, 0, 1);
-  // col1 = galactic l=90° direction — the way the Sun travels around the Galaxy
+  // col1 = galactic l=90° direction: the way the Sun travels around the Galaxy
   // (galactic rotation, ~230 km/s toward Cygnus).
   return {
     matrix: m,
@@ -172,7 +172,7 @@ scene.add(galaxy);
     C.push(0.78 * br + 0.03, 0.72 * br + 0.025, 0.6 * br + 0.06);
   };
 
-  // Disk band — longitude sampled (by rejection) so star DENSITY, not just
+  // Disk band: longitude sampled (by rejection) so star DENSITY, not just
   // brightness, falls off from the galactic centre (l≈0) toward the
   // anticentre, and the band fattens & brightens toward the centre.
   let n = 0;
@@ -186,7 +186,7 @@ scene.add(galaxy);
     place(l, b, br); n++;
   }
 
-  // Central bulge — a dense, fat concentration of stars at the centre.
+  // Central bulge: a dense, fat concentration of stars at the centre.
   for (let i = 0; i < 7000; i++) {
     const l = randn() * 0.28, b = randn() * 0.17;
     const d = Math.exp(-(l * l) / (2 * 0.28 * 0.28) - (b * b) / (2 * 0.17 * 0.17));
@@ -201,7 +201,7 @@ scene.add(galaxy);
     transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending,
   })));
 
-  // Soft glow toward the galactic centre — kept subtle so it never washes out
+  // Soft glow toward the galactic centre, kept subtle so it never washes out
   // the orbits/planets when it sits directly behind the inner system.
   const glow = glowTexture();
   for (const [s, o] of [[15000, 0.14], [7000, 0.16]]) {
@@ -216,7 +216,7 @@ scene.add(galaxy);
 
 // ---- direction arrows (from the Sun) + Galactic-Centre marker -------------
 // Ecliptic N, Galactic N and the Sun's galactic-orbit heading are short arrows
-// out of the Sun — local direction indicators. The Galactic Centre is a real
+// out of the Sun: local direction indicators. The Galactic Centre is a real
 // place, pinned to the background sphere at "infinity" so it doesn't parallax.
 function makeArrow(color) {
   const g = new THREE.Group(); scene.add(g);
@@ -271,7 +271,7 @@ const bodies = [];   // unified: { key, spec, kind, mesh, orbit, label, name, po
 const labelLayer = document.getElementById("labels");
 
 // click-card facts. Masses in Earth masses; radii are equatorial; day lengths
-// sidereal. Moon counts are the known tallies (they creep up — treat as ~).
+// sidereal. Moon counts are the known tallies (they creep up, so treat as ~).
 const FACTS = {
   mercury: { mass: "0.055 M⊕", radius: "2,440 km", volume: "0.056 × Earth", day: "58.6 d", year: "88 d", moons: "0" },
   venus:   { mass: "0.815 M⊕", radius: "6,052 km", volume: "0.86 × Earth", day: "243 d (retrograde)", year: "225 d", moons: "0" },
@@ -283,9 +283,9 @@ const FACTS = {
   neptune: { mass: "17.1 M⊕", radius: "24,622 km", volume: "58 × Earth", day: "16.1 h", year: "165 yr", moons: "16" },
   ceres:    { mass: "9.4×10²⁰ kg", discovered: "1801 (G. Piazzi)", radius: "470 km", note: "largest object in the asteroid belt" },
   pluto:    { mass: "1.3×10²² kg", discovered: "1930 (C. Tombaugh)", radius: "1,188 km", note: "5 moons; visited by New Horizons 2015" },
-  haumea:   { mass: "4.0×10²¹ kg", discovered: "2004", radius: "~816 km", note: "egg-shaped — spins in under 4 hours" },
+  haumea:   { mass: "4.0×10²¹ kg", discovered: "2004", radius: "~816 km", note: "egg-shaped; spins in under 4 hours" },
   makemake: { mass: "~3.1×10²¹ kg", discovered: "2005", radius: "~715 km", note: "bright Kuiper-belt world" },
-  eris:     { mass: "1.7×10²² kg", discovered: "2005 (M. Brown)", radius: "1,163 km", note: "more massive than Pluto — sparked its demotion" },
+  eris:     { mass: "1.7×10²² kg", discovered: "2005 (M. Brown)", radius: "1,163 km", note: "more massive than Pluto, which sparked its demotion" },
 };
 function factRows(key) {
   const f = FACTS[key];
@@ -305,7 +305,7 @@ function makeBody(key, spec, kind, posAt, orbitPts) {
     : new THREE.MeshStandardMaterial({ color: spec.color, roughness: 0.9, metalness: 0 });
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, look ? 48 : 24, look ? 32 : 24), mat);
   mesh.scale.setScalar(bodySize(spec) * (kind === "dwarf" ? 0.8 : 1));
-  // axial tilt (fixed) — the daily spin is layered on each frame in updatePositions
+  // axial tilt (fixed); the daily spin is layered on each frame in updatePositions
   const tiltQ = new THREE.Quaternion().setFromAxisAngle(XAXIS, (look ? look.tilt : 0) * Math.PI / 180);
   mesh.quaternion.copy(tiltQ);
   scene.add(mesh);
@@ -394,7 +394,7 @@ const MOONS = [
   ["Charon", "pluto", 19591, 6.387, 606, 0.08, 0xb9b0a4],
 ];
 
-// known masses (kg) for the schematic moons — feeds the info cards
+// known masses (kg) for the schematic moons (feeds the info cards)
 const MOON_MASS = {
   Moon: "7.3×10²² kg", Phobos: "1.1×10¹⁶ kg", Deimos: "1.5×10¹⁵ kg",
   Io: "8.9×10²² kg", Europa: "4.8×10²² kg", Ganymede: "1.5×10²³ kg", Callisto: "1.1×10²³ kg",
@@ -482,7 +482,11 @@ function updateMoons() {
 const DAY = 86400000;
 let simDate = new Date();
 let speedDays = 0;          // simulated days advanced per real second
-let playing = true;
+// Reduced motion: start paused (press play to run time) and jump camera
+// moves to their end instead of easing them.
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const ease = (k) => (reduceMotion ? 1 : k);
+let playing = !reduceMotion;
 let focused = null;
 let flyDist = null;         // active "fly to" target distance, null = not flying
 let homeFly = false;        // easing back to the Sun-centred overview
@@ -529,7 +533,7 @@ const pointer = new THREE.Vector2();
 const targets = [...bodies, ...moons];   // anything clickable/focusable
 
 function focusTarget(t) {
-  // A spacecraft outside its data window has no position — its marker sits
+  // A spacecraft outside its data window has no position: its marker sits
   // hidden at the origin, so flying to it would dive INTO THE SUN. The user
   // asked to see the craft: snap the clock to the nearest covered moment
   // (same spirit as approach rows jumping to their date), then fly.
@@ -548,7 +552,7 @@ function focusTarget(t) {
   }
   focused = t;
   // Sprite markers (spacecraft/approaches/interstellar) keep a constant *screen*
-  // size, so their world scale varies with camera distance — a fixed close
+  // size, so their world scale varies with camera distance, so a fixed close
   // framing is correct for them. Meshes (planets/moons) frame by their size.
   flyDist = t.mesh.isSprite ? 5 : Math.max(3, t.mesh.scale.x * 4.5);
   ui.info.hidden = false;
@@ -614,11 +618,12 @@ document.getElementById("faster").onclick = () => { demoCue = null; setSpeedIdx(
 ui.play.onclick = () => {
   playing = !playing;
   // "paused" can also mean speed 0 (shared links & approach jumps hold their
-  // moment that way) — resuming from that state must un-zero the speed too,
+  // moment that way). Resuming from that state must un-zero the speed too,
   // or play does nothing and the button looks broken.
   if (playing && speedDays === 0) setSpeedIdx(SPEEDS.indexOf(1));
   ui.play.textContent = playing ? "⏸" : "▶";
 };
+if (!playing) ui.play.textContent = "▶";   // reduced motion starts paused
 document.getElementById("now").onclick = () => { demoCue = null; simDate = new Date(); setSpeedIdx(SPEEDS.indexOf(1)); smallDirty = true; };
 document.getElementById("log").onclick = (e) => {
   logScale = !logScale;
@@ -760,14 +765,14 @@ function updateLabels() {
 // (refreshed by the M3 GitHub Action). Per-body rotation coefficients are
 // precomputed once; each update is just a Kepler solve + 3 dot products, and
 // updates are throttled (small bodies move slowly) so cost is independent of
-// framerate. Drawn as points — the asteroid belt & scattered orbits emerge.
+// framerate. Drawn as points, from which the asteroid belt & scattered orbits emerge.
 const SMALL_STRIDE = 12;   // [a, e, b, ma, ep, n, P11,P12,P21,P22,P31,P32]
 const ROCK = TEX.rockSprite();   // shared rock sprite for all small-body layers
 
 // ---- data freshness --------------------------------------------------------
 // Every Action-committed JSON carries a "generated" timestamp. Show the OLDEST
 // one (the weakest link) so the HUD honestly reports how fresh the "live" data
-// is — and call out any layer whose fetch failed outright.
+// is, and call out any layer whose fetch failed outright.
 const dataStatus = { oldest: null, failed: [] };
 function noteData(json) {
   const t = json?.generated ? Date.parse(json.generated) : NaN;
@@ -779,7 +784,7 @@ function noteDataFail(name) {
   renderDataStatus();
 }
 // Narrow screens hide the whole .hint block (no room), which used to take the
-// freshness chip with it — reparent the chip into the HUD there instead.
+// freshness chip with it. Reparent the chip into the HUD there instead.
 // Keep this width in sync with the .hint display:none breakpoint in index.html.
 const narrowMQ = matchMedia("(max-width: 1080px)");
 function placeDataStatus() {
@@ -901,10 +906,10 @@ loadSmall("comets", { size: 2.8, color: 0x6fd3e6 });
 loadSmall("tnos", { size: 2.4, color: 0xa9c4e6 });   // Kuiper belt: icy pale blue
 
 // ---- Oort cloud (schematic) ------------------------------------------------
-// A spherical shell of icy nuclei from ~2,000 to ~50,000 AU — 66× beyond
+// A spherical shell of icy nuclei from ~2,000 to ~50,000 AU, 66× beyond
 // Neptune at its inner edge, so it only fits on screen in log-distance mode
 // (enabling the layer flips log mode on). Isotropic on purpose: it's a sphere,
-// not a disc — that's the whole visual point. Density thins outward.
+// not a disc. That's the whole visual point. Density thins outward.
 const OORT_N = 4500, OORT_RMIN = 2000, OORT_RMAX = 50000;
 const oortDir = new Float32Array(OORT_N * 3);   // unit directions (ecliptic AU frame)
 const oortRad = new Float64Array(OORT_N);       // radii in AU
@@ -977,13 +982,13 @@ function rebuildTrails() {
 // Keep a world-space marker sprite at a roughly constant on-screen size, so it
 // reads as a small icon at any zoom instead of ballooning over a nearby planet
 // (e.g. JWST at L2 sits ~on Earth at this scale). The factors are fractions of
-// camera distance — one place to tune every marker family's apparent size.
+// camera distance: one place to tune every marker family's apparent size.
 const MARKER_PX = { craft: 0.028, approach: 0.013, approachNear: 0.017, interstellar: 0.02 };
 function markerScale(worldPos, k) {
   // Constant-screen-size, but capped to a fraction of the marker's distance
   // from the Sun: zoomed far out, an uncapped icon pinned at ~1 AU grows to
   // world size ≫ its solar distance and visually swallows the Sun (JWST
-  // "inside the Sun"). The cap keeps it clear of the origin at any zoom —
+  // "inside the Sun"). The cap keeps it clear of the origin at any zoom;
   // it shrinks toward a dot when the whole system is in frame, which is the
   // honest rendering anyway; it uncaps again as the camera closes in.
   return Math.min(k * camera.position.distanceTo(worldPos), worldPos.length() * 0.35);
@@ -1021,7 +1026,7 @@ function updateSpacecraft(jd) {
     if (!pos) { sc.marker.visible = false; sc.leader.visible = false; continue; }
     sc.marker.visible = true;
     sc.marker.position.copy(toScene(pos));
-    // nudge L2/orbiter craft off their planet — and draw a leader line back to
+    // nudge L2/orbiter craft off their planet, and draw a leader line back to
     // it so the offset reads as "attached to Earth", not "floating in space"
     const from = explodeFromPlanets(sc.marker.position);
     if (from) {
@@ -1128,11 +1133,11 @@ function shortName(s) {
 
 // ---- physical estimates (size / mass / volume) ------------------------------
 // Size: SBDB's measured diameter (radar/occultation/thermal) when it has one,
-// else derived from absolute magnitude H at an assumed albedo of 0.14 — the
-// standard D = 1329/√p · 10^(−H/5), good to ~×2 either way. Mass is ALWAYS an
+// else derived from absolute magnitude H at an assumed albedo of 0.14 (the
+// standard D = 1329/√p · 10^(−H/5), good to ~×2 either way). Mass is ALWAYS an
 // estimate for these bodies: a sphere of that diameter at an assumed bulk
 // density (stony rubble ~2.6 g/cm³ for NEOs, fluffy ice ~0.6 g/cm³ for comet
-// nuclei — 67P measured 0.53). Order-of-magnitude honest, so rows say "est."
+// nuclei; 67P measured 0.53). Order-of-magnitude honest, so rows say "est."
 const SUP = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴",
               "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
 const sup = (n) => String(n).split("").map((c) => SUP[c]).join("");
@@ -1186,9 +1191,9 @@ async function loadApproaches() {
         return `<div><span>Type</span><b>Near-Earth object</b></div>` +
           `<div><span>Closest approach</span><b>${o.cd} UTC</b></div>` +
           `<div><span>Miss distance</span><b>${o.ld.toFixed(2)} LD · ${Math.round(km).toLocaleString()} km</b></div>` +
-          // 42,164 km = geostationary-ring radius from Earth's centre — the
+          // 42,164 km = geostationary-ring radius from Earth's centre, the
           // headline fact for Apophis 2029: it passes beneath our GEO satellites
-          (km < 42164 ? `<div><span>How close?</span><b>inside the geostationary ring — ${Math.round(alt).toLocaleString()} km above the surface</b></div>` : "") +
+          (km < 42164 ? `<div><span>How close?</span><b>inside the geostationary ring, ${Math.round(alt).toLocaleString()} km above the surface</b></div>` : "") +
           `<div><span>Relative speed</span><b>${o.v} km/s</b></div>` +
           (D ? sizeMassRows(D, 2600, o.di != null) : "") +
           `<div><span>Distance from Sun</span><b>${r.toFixed(3)} AU</b></div>`;
@@ -1203,7 +1208,7 @@ async function loadApproaches() {
   if (matchMedia("(max-width: 700px)").matches)   // phones: start the list collapsed
     document.getElementById("approach-panel").classList.add("collapsed");
 
-  // The 2029 Apophis pass (0.10 LD) is the showpiece — one click cues it up:
+  // The 2029 Apophis pass (0.10 LD) is the showpiece. One click cues it up:
   // jump to 3 days before closest approach, focus it, play at 1 d/s so the
   // rock visibly sweeps past Earth (pulsing halo + flag line take over).
   const apophis = approaches.find((a) => a.approach.des === "99942");
@@ -1233,7 +1238,7 @@ function updateApproaches(jd) {
     a.glow.position.copy(a.mesh.position);
     a.glow.scale.setScalar(ms * 4.5);
     a.glow.visible = a.near && approachLayer.visible;
-    if (a.near) a.glow.material.opacity = 0.30 + 0.22 * (0.5 + 0.5 * Math.sin(performance.now() / 520));
+    if (a.near) a.glow.material.opacity = reduceMotion ? 0.41 : 0.30 + 0.22 * (0.5 + 0.5 * Math.sin(performance.now() / 520));
     if (a.near && dt < flagDt) { flag = a; flagDt = dt; }
   }
   if (flag && approachLayer.visible) {     // draw Earth ↔ approaching object
@@ -1251,7 +1256,7 @@ function updateApproaches(jd) {
 // While the demo button is driving the clock: cruise in at 1 d/s, drop to
 // 1 h/s inside ±12 h of closest approach so the skim reads in real time, then
 // hand the controls back once the rock is clear. Any manual speed/scrub input
-// cancels the cue — the user has taken over.
+// cancels the cue: the user has taken over.
 function updateDemo(jd) {
   if (!demoCue || !playing) return;
   const dt = jd - demoCue.approach.jd;
@@ -1298,8 +1303,8 @@ document.getElementById("approach-head").onclick = () =>
   document.getElementById("approach-panel").classList.toggle("collapsed");
 
 // ---- interstellar visitors (1I/'Oumuamua, 2I/Borisov, 3I/ATLAS) -----------
-// Objects from beyond the solar system on hyperbolic (unbound) trajectories —
-// they fall in, whip around the Sun once, and leave forever. Drawn like the
+// Objects from beyond the solar system on hyperbolic (unbound) trajectories.
+// They fall in, whip around the Sun once and leave forever. Drawn like the
 // spacecraft: a trajectory + a marker propagated along it with the scrubber.
 const interstellarLayer = new THREE.Group(); scene.add(interstellarLayer);
 const interstellar = [];
@@ -1326,7 +1331,7 @@ for (const [, el] of Object.entries(INTERSTELLAR)) {
         `<div><span>Discovered</span><b>${el.disc}</b></div>` +
         `<div><span>Perihelion</span><b>${el.peri}</b></div>` +
         `<div><span>Size (est.)</span><b>${el.size}</b></div>` +
-        `<div><span>Eccentricity</span><b>${el.e.toFixed(2)} — unbound</b></div>` +
+        `<div><span>Eccentricity</span><b>${el.e.toFixed(2)}, unbound</b></div>` +
         `<div><span>Distance from Sun</span><b>${r.toFixed(2)} AU</b></div>` +
         `<div style="opacity:.6"><span>origin</span><b>interstellar space</b></div>`;
     },
@@ -1359,7 +1364,7 @@ document.getElementById("interstellar").onclick = (e) => {
 
 // ---- famous comets (named & focusable) -------------------------------------
 // The Tier-2 comet point-cloud is anonymous. These greats get real orbits +
-// labels + info cards — same SBDB element format as the dwarfs/approaches, so
+// labels + info cards. Same SBDB element format as the dwarfs/approaches, so
 // the same propagator. Data: tools/fetch_famous_comets.py (curated, e ≲ 0.97).
 // They ride the `comets` layer toggle rather than adding another button.
 const famousLayer = new THREE.Group(); scene.add(famousLayer);
@@ -1423,7 +1428,7 @@ function updateFamousComets() {
 loadFamousComets();
 
 // ---- shareable URL state ---------------------------------------------------
-// The hash mirrors the scene — #YYYY-MM-DD/BodyName — so a moment can be linked
+// The hash mirrors the scene (#YYYY-MM-DD/BodyName) so a moment can be linked
 // directly (e.g. #2029-04-13/Apophis flies straight to the flyby). The body
 // name is URI-encoded ("3I/ATLAS" → 3I%2FATLAS), so the first literal "/" is
 // the separator. replaceState keeps updates out of back-button history.
@@ -1483,20 +1488,20 @@ function tick(now) {
   updateFamousComets();
 
   if (focused) {
-    controls.target.lerp(focused.mesh.position, 0.14);
+    controls.target.lerp(focused.mesh.position, ease(0.14));
     if (flyDist !== null) {   // ease the camera to a framing distance, keeping angle
       controls.enableDamping = false;   // don't let damping fight the programmatic move
       const off = camera.position.clone().sub(focused.mesh.position);
       const d = off.length() || 1;
       const want = focused.mesh.position.clone().addScaledVector(off.multiplyScalar(1 / d), flyDist);
-      camera.position.lerp(want, 0.12);
+      camera.position.lerp(want, ease(0.12));
       if (Math.abs(d - flyDist) < Math.max(0.4, flyDist * 0.03)) { flyDist = null; controls.enableDamping = true; }
     }
   } else {
-    controls.target.lerp(ORIGIN, homeFly ? 0.12 : 0.05);
+    controls.target.lerp(ORIGIN, ease(homeFly ? 0.12 : 0.05));
     if (homeFly) {
       controls.enableDamping = false;
-      camera.position.lerp(HOME, 0.1);
+      camera.position.lerp(HOME, ease(0.1));
       if (camera.position.distanceTo(HOME) < 6) { homeFly = false; controls.enableDamping = true; }
     }
   }

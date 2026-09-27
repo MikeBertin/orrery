@@ -50,7 +50,7 @@ def sbdb_elements(des):
             "om": num(e.get("om")), "w": num(e.get("w")), "ma": num(e.get("ma")),
             "ep": num(o.get("epoch")),
         }
-        # measured diameter (radar/occultation/thermal) when SBDB has one, km —
+        # measured diameter (radar/occultation/thermal) when SBDB has one, in km;
         # the client shows it as Size and estimates mass/volume from it; objects
         # without one fall back to an H-magnitude size estimate client-side
         for p in d.get("phys_par") or []:

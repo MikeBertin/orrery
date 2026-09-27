@@ -1,4 +1,4 @@
-// demo-capture.js — records the three README GIFs, one continuous shot each:
+// demo-capture.js: records the three README GIFs, one continuous shot each:
 //
 //   wide     web/demo-wide.gif     the Sun with everything revolving at
 //                                  30 d/s while the camera slowly pans,
@@ -19,23 +19,23 @@
 //   # 2. record  (needs: npm i playwright  +  Google Chrome installed)
 //   node demo-capture.js                # or SHOT=wide node demo-capture.js
 //
-//   # 3. webm -> gif  (needs ffmpeg) — and CADENCE MATTERS: the webm is 25 fps,
+//   # 3. webm -> gif  (needs ffmpeg). CADENCE MATTERS: the webm is 25 fps,
 //   #    so pick speed×fps pairs that sample every Nth frame EXACTLY, or camera
 //   #    pans judder (uneven frame steps). Two proven recipes:
 //   #      jupiter/apophis: ×1.333 → 33.33 fps content, fps=50/3 = every 2nd
 //   #      wide:            ×1.5   → 37.5  fps content, fps=12.5 = every 3rd
-//   #    (wide is full-frame starfield motion — it compresses ~2× worse than
+//   #    (wide is full-frame starfield motion; it compresses ~2× worse than
 //   #    the dark close-ups, hence the lower rate + 600px to stay under
 //   #    GitHub's ~10 MB inline-animation cap. trim= skips the load settle.)
 //   V=$(ls -t <shot>/*.webm | head -1)
-//   # jupiter: trim=start=2.9   apophis: trim=start=2.7   — then:
+//   # jupiter: trim=start=2.9   apophis: trim=start=2.7   then:
 //   FILT="trim=start=<T>,setpts=(PTS-STARTPTS)*0.75,fps=50/3,scale=640:-1:flags=lanczos"
 //   # wide:
 //   FILT="trim=start=3.4:end=14.8,setpts=(PTS-STARTPTS)/1.5,fps=12.5,scale=600:-1:flags=lanczos"
 //   ffmpeg -i "$V" -vf "$FILT,palettegen=max_colors=128:stats_mode=diff" -y palette.png
 //   ffmpeg -i "$V" -i palette.png -lavfi "${FILT}[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle:new=1" -y web/demo-<shot>.gif
 //   # NB the ${FILT} braces: zsh parses $FILT[x] as a subscript and silently
-//   # empties it — the graph then starts with ';' and ffmpeg says
+//   # empties it; the graph then starts with ';' and ffmpeg says
 //   # "No such filter: ''".
 //
 // Re-record whenever the look changes; the GIFs go stale like og.jpg does.
@@ -54,7 +54,7 @@ const tap = async (page, id, after = 250) => { await page.click('#' + id); await
 // Drag across the canvas to orbit the camera (OrbitControls), dx/dy in px.
 // Eased (cosine) so the pan starts and ends gently instead of snapping.
 // GOTCHA: the floating body labels are pointer-events:auto and sit ABOVE the
-// canvas — a mousedown that lands on one goes to the label (possibly focusing
+// canvas. A mousedown that lands on one goes to the label (possibly focusing
 // that body) and the drag never reaches OrbitControls. Probe for empty sky.
 async function orbit(page, dx, dy, ms = 1400) {
   const [cx, cy] = await page.evaluate(() => {
@@ -85,7 +85,7 @@ const SHOTS = {
   // Way's bright galactic core through the background.
   async wide(page) {
     await tap(page, 'now', 300);
-    // NOTE: the app auto-plays on load — do NOT tap #play here, it PAUSES.
+    // NOTE: the app auto-plays on load. Do NOT tap #play here, it PAUSES.
     await tap(page, 'faster', 120);                        // 1 d/s → 7 d/s
     await tap(page, 'faster', 200);                        // → 30 d/s
     await sleep(1500);
@@ -94,7 +94,7 @@ const SHOTS = {
   },
 
   // Jupiter close-up: the app's own smooth fly-in, then hold while the four
-  // Galilean moons whirl (Io's period is 1.77 d — a lap every ~1.8 s at 1 d/s).
+  // Galilean moons whirl (Io's period is 1.77 d: a lap every ~1.8 s at 1 d/s).
   async jupiter(page) {
     await page.fill('#search', 'Jupiter');
     await sleep(300);
@@ -103,7 +103,7 @@ const SHOTS = {
     await sleep(5800);                                     // hold: moons orbit, GRS turns
   },
 
-  // The Apophis 2029 skim — the built-in demo cue does the cinematography:
+  // The Apophis 2029 skim: the built-in demo cue does the cinematography:
   // jumps three days out, focuses, cruises in at 1 d/s, auto-slows to 1 h/s
   // inside ±12 h of closest approach (0.10 LD, inside the geostationary ring).
   async apophis(page) {
@@ -122,7 +122,7 @@ const SHOTS = {
     const context = await browser.newContext({
       viewport: { width: W, height: H },
       // DSF 1, not 2: at 2× headless Chrome renders the WebGL scene at 4×
-      // the pixels and drops ~25% of frames — the recording stutters. 1280px
+      // the pixels and drops ~25% of frames, so the recording stutters. 1280px
       // native is already 2× the final GIF width.
       deviceScaleFactor: 1,
       recordVideo: { dir: `${OUT}/${name}`, size: { width: W, height: H } },
@@ -131,7 +131,7 @@ const SHOTS = {
     page.setDefaultTimeout(12000);
     await page.goto(BASE + '/', { waitUntil: 'load' });
     // camera drags sweep across the HTML labels and would select their text
-    // (blue highlights all over the frame) — kill selection for the shoot
+    // (blue highlights all over the frame), so kill selection for the shoot
     await page.addStyleTag({ content: '*{user-select:none!important;-webkit-user-select:none!important}' });
     await sleep(2600);                 // let the SBDB/Horizons JSON land + settle
     await SHOTS[name](page);

@@ -1,4 +1,4 @@
-// textures.js — procedural planet/moon/ring/sun textures.
+// textures.js: procedural planet/moon/ring/sun textures.
 //
 // No image assets: every surface is generated in-canvas from 3D value noise
 // sampled on the sphere (so there are no polar pinches or seams), then mapped
@@ -173,7 +173,7 @@ export function rockSprite() {
 }
 
 // ---- generic satellite icon (spacecraft markers) ---------------------------
-// A little satellite silhouette — central bus + two solar-panel wings + dish —
+// A little satellite silhouette (central bus + two solar-panel wings + dish),
 // drawn grayscale on transparent so each mission's colour tints it.
 export function satelliteSprite() {
   const S = 64, c = document.createElement("canvas"); c.width = c.height = S;

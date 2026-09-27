@@ -3,12 +3,12 @@
 SBDB, so Orrery can draw them as named, focusable objects (the anonymous comet
 point-cloud stays; these get orbits + labels).
 
-Curation rule: elliptic solver only — keep e ≲ 0.97 (near-parabolic greats like
+Curation rule: elliptic solver only, so keep e ≲ 0.97 (near-parabolic greats like
 Hale-Bopp need a different propagator; see buildStride's e<0.995 cutoff).
 
 Accuracy note: SBDB returns one osculating element set (often decades old, e.g.
 Halley's is the 1986 apparition). Two-body propagation across decades drifts
-vs. the truly perturbed orbit — Halley's 2061 perihelion lands ~5 months late.
+vs. the truly perturbed orbit: Halley's 2061 perihelion lands ~5 months late.
 Fine for visualization; don't use for prediction.
 
 Output: web/data/comets_famous.json
@@ -68,7 +68,7 @@ def main():
                 "om": num(e.get("om")), "w": num(e.get("w")), "ma": num(e.get("ma")),
                 "ep": num(o.get("epoch")),
             }
-            # measured nucleus diameter (km) when SBDB has one — the client
+            # measured nucleus diameter (km) when SBDB has one; the client
             # shows it + estimates mass/volume at comet-nucleus density
             for p in d.get("phys_par") or []:
                 if p.get("name") == "diameter" and num(p.get("value")):
